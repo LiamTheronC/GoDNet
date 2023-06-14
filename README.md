@@ -4,3 +4,5 @@ Learn how to push files to git. A lot of problems encountered.
 asked GPT for solution, didn't work out.
 Finally have to create a new repository.
 
+know about matrix rotaion 
+
