@@ -6,7 +6,7 @@ import numpy as np
 from fractions import gcd
 from numbers import Number
 import torch
-from torch import nn
+from torch import nn, Tensor
 from torch.utils.data import DataLoader, Dataset
 from torch.nn import functional as F
 from net_M6 import GreatNet, Loss, pre_gather
@@ -97,14 +97,14 @@ def val(net,val_loader,loss_f,epoch,num_epochs):
 
 
 def train1(net,train_loader,loss_f,optimizer,epoch,num_epochs):
-    # output is trajectory
+    # output of the net is directly trajectory
     net.train()
     loss_t = []
     for batch_idx, data in enumerate(train_loader):
-        #print(feat.shape,gt_pred.shape,has_pred.shape,ctrs.shape)
 
         outputs = net(data)
         loss_out = loss_f(outputs,data)
+        
 
         # Backward and optimize
         optimizer.zero_grad()
