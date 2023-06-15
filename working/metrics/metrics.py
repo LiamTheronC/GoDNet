@@ -62,10 +62,33 @@ def get_minFDE(post_out,num_preds,data):
 
 
 def get_minADE(post_out,num_preds,data):
+    #num_preds = np.array([30, 50, 80])
+    minADE = []
+    for j in range(len(num_preds)):
+        reg,gt_preds,has_preds,_,_ = get_lastIdcs(post_out, num_preds[j], data)
 
-    return 0
+        dist_6m = []
+        for i in range(config["num_mods"]):
+            
+            dist = []
+            for j in range(len(reg)):
+                rr = reg[j][i]
+                gg = gt_preds[j].cuda()
+                hh = has_preds[j].cuda()
+                dd = torch.sqrt(((rr[hh] - gg[hh])**2).sum(1))
+                dist.append(dd.mean().item())
+            
+            dist_6m.append(torch.tensor(dist).view(-1,1))
 
+        zz = torch.cat(dist_6m,1)
+        min_dist, min_idcs = zz.min(1)
+        ade = min_dist.mean().item()
+        minADE.append(ade)
 
+    mean = torch.tensor(minADE).mean().item()
+    minADE.append(mean)
+    
+    return minADE
 
 
 
