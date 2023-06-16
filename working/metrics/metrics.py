@@ -1,6 +1,11 @@
+import os
 import numpy as np
 import torch
 import logging
+import matplotlib.pyplot as plt
+import sys
+sys.path.append('/home/avt/prediction/Waymo/working/')
+from utils import pre_gather, gather
 
 config = dict()
 config["metrics_preds"] = [30,50,80]
@@ -37,11 +42,12 @@ def get_lastIdcs(out,num_pred,data):
     return reg, gt_preds, has_preds, last_idcs, row_idcs
 
 
-def get_minFDE(post_out,data,num_preds,num_mods):
+def get_minFDE(post_out,data,metrics_preds,num_mods):
     #num_preds = np.array([30, 50, 80])
     minFDE = []
-    for j in range(len(num_preds)):
-        reg,gt_preds,_,last_idcs, row_idcs = get_lastIdcs(post_out, num_preds[j],data)
+    f_idcs = []
+    for j in range(len(metrics_preds)):
+        reg,gt_preds,_,last_idcs, row_idcs = get_lastIdcs(post_out, metrics_preds[j],data)
 
         dist_6m = []
         for i in range(num_mods):
@@ -56,11 +62,12 @@ def get_minFDE(post_out,data,num_preds,num_mods):
         fde = min_dist.mean().item()
 
         minFDE.append(fde)
+        f_idcs.append(min_idcs)
     
     mean = torch.tensor(minFDE).mean().item()
     minFDE.append(mean)
 
-    return minFDE
+    return minFDE, f_idcs
 
 
 def get_minADE(post_out,data,num_preds,num_mods):
@@ -100,7 +107,7 @@ class Postprocess():
     def append(self,metrics,loss,post_out,data):
         
 
-        minFDE = get_minFDE(post_out,
+        minFDE,f_idcs = get_minFDE(post_out,
                             data,
                             config["metrics_preds"],
                             config["num_mods"])
@@ -113,8 +120,9 @@ class Postprocess():
         m = dict()
         
         m['loss'] = loss
-        m['fde'] = minFDE[3]
-        m['ade'] = minADE[3]
+        m['fde'] = minFDE[2]
+        m['ade'] = minADE[2]
+        m['f_idcs'] = f_idcs
 
         for key in m.keys():
             if key in metrics.keys():
@@ -125,33 +133,75 @@ class Postprocess():
        
         return metrics
 
+
     def display(self, metrics, dt, epoch, num_epochs, mode="Train"):
 
         out= []
         for key in metrics.keys():
-            out.append(sum(metrics[key])/len(metrics[key]))
+            if key in ['loss','fde','ade']:
+                out.append(sum(metrics[key])/len(metrics[key]))
     
         if mode == 'Train':
             msg1 = ' --- (' + mode + '), Epoch [{}/{}], Time:{:.1f} ---'.format(epoch+1, num_epochs, dt)
         elif mode == 'Validation':
             msg1 = ' ***(' + mode + '), Epoch [{}/{}], Time:{:.1f} ***'.format(epoch+1, num_epochs, dt)
         
-        msg2 = 'loss:{:.2f},fde:{:.2f},ade:{:.2f}'.format(out[0],out[1],out[2])
+        msg2 = 'loss:{:.2f} --- fde:{:.2f} --- ade:{:.2f}'.format(out[0],out[1],out[2])
 
         print(msg1)
         print(msg2)
         logging.info(msg1)
         logging.info(msg2)
 
-
-
-
-
-def gather(gts) -> list:
-
-    tmp = list()
-    for i,g in enumerate(gts):
-        zz = torch.stack(g, dim=0)
-        tmp.append(zz)
+        return msg2
     
-    return tmp
+
+    def plot(self, metrics, data, outputs, msg, key = 1):
+
+        f_idcs = metrics['f_idcs'][0][2]
+        row_idcs = torch.tensor(range(len(f_idcs)))
+
+        gt_pred, has_pred = pre_gather(data['gt_preds']), pre_gather(data['has_preds'])
+        
+        # prediction
+        if key == 1:# plot only the minFDE of each object
+            regs = outputs['reg'][0][row_idcs,f_idcs].cpu().detach()
+            for j,reg in enumerate(regs):
+                plt.plot(reg[has_pred[j]].T[0],reg[has_pred[j]].T[1],color='green',linewidth=0.8)
+        elif key == 6:# plot all the six outputs of each object
+            regs = outputs['reg'][0]
+            for i in range(config["num_mods"]):
+                reg = regs[:,i].cpu().detach()
+                for j,z in enumerate(reg):
+                    plt.plot(z[has_pred[j]].T[0],z[has_pred[j]].T[1],color='green',linewidth=0.8)
+        
+        
+        # ground truth
+        for i, gt in enumerate(gt_pred):
+            tmp = gt[has_pred[i]]
+            if len(tmp)>0:
+                plt.plot(tmp.T[0],tmp.T[1],color='red', linewidth = 1.0, linestyle='--')
+                plt.scatter(tmp.T[0][0],tmp.T[1][0],s=30, color ='red')
+        
+        # graph
+        rot = data['rot'][0]
+        orig = data['orig'][0]
+        ctrs = data['graph'][0]['ctrs'][:, :2]
+        ctrs = torch.matmul(ctrs, rot) + orig[:2]
+        plt.scatter(ctrs.T[0] ,ctrs.T[1], c = 'black',s = 0.05)
+
+
+        # trajectory history 
+        trajs = data['trajs_xyz'][0]
+        masks = data['valid_masks'][0]
+        for i,traj in enumerate(trajs):
+            traj = traj[:12][masks[i][:12]]
+            plt.plot(traj.T[0],traj.T[1],color='blue',linewidth=1.0, linestyle='--')
+
+        
+        plt.gca().set_aspect('equal')
+        plt.title(msg)
+        plt.xlabel('x(m)')
+        plt.ylabel('y(m)')
+        plt.show()
+

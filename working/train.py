@@ -203,7 +203,7 @@ def main():
         train1(net,train_loader,loss_f,optimizer,epoch,num_epochs,post)
         if (epoch + 1) % 10 == 0:
             val1(net,val_loader,loss_f,epoch,num_epochs,post)
-        torch.save(net.state_dict(), 'weights/model_Great_m6_weights.pth')
+        torch.save(net.state_dict(), 'weights/laneGCN_weights_date.pth')
 
 
 if __name__ == "__main__":

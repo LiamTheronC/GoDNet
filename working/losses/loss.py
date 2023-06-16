@@ -7,8 +7,9 @@ import torch
 from torch import nn, Tensor
 from torch.nn import functional as F
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
-from utils import to_long, gpu
+from utils import to_long, gpu, pre_gather
 from memory_profiler import profile
+
 
 class PredLoss(nn.Module):
     def __init__(self, config):
@@ -94,13 +95,3 @@ class Loss(nn.Module):
         ) + loss_out["reg_loss"] / (loss_out["num_reg"] + 1e-10)
         return loss_out
     
-
-def pre_gather(gts: List) -> Tensor:
-    tmp = list()
-    for g in gts:
-        tmp += g
-    
-    tmp = torch.stack(tmp)
-
-    return tmp
-

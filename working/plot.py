@@ -36,6 +36,14 @@ class W_Dataset(Dataset):
 
 
 def main():
+
+    # seed = 33
+
+    # torch.manual_seed(seed)
+    # torch.cuda.manual_seed(seed)
+    # np.random.seed(seed)
+    # random.seed(seed)
+
     config = dict()
     config['n_actornet'] = 128
     config['num_epochs'] = 50
@@ -58,8 +66,7 @@ def main():
     config["cls_coef"] = 1.0
     config["reg_coef"] = 1.0
     config["metrics_preds"] = [30,50,80]
-
-    config['model_weights'] = 'weights/model_Great_m6_weights.pth'
+    config['model_weights'] = 'weights/laneGCN_weights_616.pth'
 
     net = GreatNet(config)
     net.load_state_dict(torch.load(config['model_weights']))
@@ -72,12 +79,6 @@ def main():
     
     
     batch_size = 1
-    # dataset_train = W_Dataset(config['train_split'])
-    # train_loader = DataLoader(dataset_train, 
-    #                        batch_size = batch_size,
-    #                        collate_fn = collate_fn, 
-    #                        shuffle = True, 
-    #                        drop_last=True)
     
     dataset_val = W_Dataset(config['val_split'])
     val_loader = DataLoader(dataset_val, 
@@ -99,73 +100,9 @@ def main():
                 outputs = net(data)
                 loss_out = loss_f(outputs,data)
                 post.append(metrics,loss_out['loss'].item(),outputs,data)
-                
-                post.display(metrics, 0, epoch, num_epochs, "Validation")
-                
-                regs = outputs['reg']
+                msg = post.display(metrics, 0, epoch, num_epochs, "Validation")
+                post.plot(metrics, data, outputs, msg, 1)
 
-                # for g in data['graph']:
-                #      plt.scatter(g['ctrs'].T[0] ,g['ctrs'].T[1], c = 'black',s = 0.05)
-                
-
-                for reg in regs:
-                    reg = reg.cpu().detach()
-                    reg = reg.view(-1,80,2)
-                    for z in reg:
-                        plt.plot(z.T[0],z.T[1],color='green',linewidth=0.8)
-                
-                gt_pred, has_pred = pre_gather(data['gt_preds']), pre_gather(data['has_preds'])
-                for i, gt in enumerate(gt_pred):
-                    tmp = gt[has_pred[i]]
-                    if len(tmp)>0:
-                        plt.plot(tmp.T[0],tmp.T[1],color='red', linewidth = 1.0, linestyle='--')
-                        plt.scatter(tmp.T[0][0],tmp.T[1][0],s=30, color ='red')
-                
-                rot = data['rot'][0]
-                orig = data['orig'][0]
-                ctrs = data['graph'][0]['ctrs'][:, :2]
-                ctrs = torch.matmul(ctrs, rot) + orig[:2]
-                plt.scatter(ctrs.T[0] ,ctrs.T[1], c = 'black',s = 0.05)
-
-
-                trajs = data['trajs_xyz'][0]
-                masks = data['valid_masks'][0]
-                for i,traj in enumerate(trajs):
-                    traj = traj[:11][masks[i][:11]]
-                    plt.plot(traj.T[0],traj.T[1],color='blue',linewidth=1.0, linestyle='--')
-
-    
-                # for i in range(len(out["reg"])):
-                #     out["reg"][i] = torch.matmul(out["reg"][i], rot[i]) + orig[i][:2].view(1, 1, 1, -1)
-
-
-                #     if len(tmp)>0:
-                #         plt.plot(tmp.T[0],tmp.T[1],color='red')
-                #         plt.scatter(tmp.T[0][0],tmp.T[1][0],s=30, color ='red')
-                #         plt.plot(t.T[0],t.T[1],color='blue',linewidth=1, linestyle='--')
-
-                # # for t in tt:
-                # #     plt.plot(t.T[0],t.T[1],color='blue',linewidth=1, linestyle='--')
-
-
-                
-                # plt.gca().set_aspect('equal')
-                # plt.show()
-
-                # for g in data['graph']:
-                #     plt.scatter(g['ctrs'].T[0] ,g['ctrs'].T[1], c = 'black',s = 0.05)
-
-                # for i, gt in enumerate(gt_pred):
-                #     tmp = gt[has_pred[i]]
-                #     out = outputs[i][has_pred[i]]
-
-                #     if len(tmp)>0:
-                #         plt.plot(tmp.T[0],tmp.T[1],color='red')
-                #         plt.scatter(tmp.T[0][0],tmp.T[1][0],s=30, color ='red')
-                #         plt.plot(out.T[0],out.T[1],color='blue', linewidth=1, linestyle='--')
-                
-                plt.gca().set_aspect('equal')
-                plt.show()
                 break
             break
 
