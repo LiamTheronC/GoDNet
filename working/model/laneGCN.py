@@ -27,7 +27,6 @@ class Linear(nn.Module):
             exit('SyncBN has not been added!')
         
         self.relu = nn.ReLU(inplace=True)
-        #self.relu = nn.Sigmoid()
         self.act = act
 
     def forward(self, x):
@@ -773,6 +772,11 @@ class GreatNet(nn.Module):
         actors = self.a2a(actors, actor_idcs, actor_ctrs)
         
         out = self.pred_net(actors, actor_idcs, actor_ctrs)
+        rot, orig = gpu(data["rot"]), gpu(data["orig"])
+
+        # to_global
+        for i in range(len(out["reg"])):
+            out["reg"][i] = torch.matmul(out["reg"][i], rot[i]) + orig[i][:2].view(1, 1, 1, -1)
 
         return out
 
@@ -788,7 +792,7 @@ class PredLoss(nn.Module):
         cls = torch.cat([x for x in cls], 0)
         reg = torch.cat([x for x in reg], 0)
         has_preds = pre_gather(data['has_preds']).cuda()
-        gt_preds = pre_gather(data['gt2_preds']).float()[:,:,:2].cuda()
+        gt_preds = pre_gather(data['gt_preds']).float()[:,:,:2].cuda()
 
         loss_out = dict()
         zero = 0.0 * (cls.sum() + reg.sum())
@@ -844,7 +848,7 @@ class PredLoss(nn.Module):
             reg[has_preds], gt_preds[has_preds]
         )
         loss_out["num_reg"] += has_preds.sum().item()
-        loss_out['reg'] = reg
+
         return loss_out
 
 
@@ -862,7 +866,6 @@ class Loss(nn.Module):
         return loss_out
 
 
-
 def pre_gather(gts: List) -> Tensor:
     tmp = list()
     for g in gts:
@@ -870,5 +873,15 @@ def pre_gather(gts: List) -> Tensor:
     
     tmp = torch.stack(tmp)
 
+    return tmp
+
+
+def gather(gts) -> list:
+
+    tmp = list()
+    for i,g in enumerate(gts):
+        zz = torch.stack(g, dim=0)
+        tmp.append(zz)
+    
     return tmp
 

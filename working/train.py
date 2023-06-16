@@ -9,13 +9,15 @@ import torch
 from torch import nn, Tensor
 from torch.utils.data import DataLoader, Dataset
 from torch.nn import functional as F
-from net_M6 import GreatNet, Loss, pre_gather
+from model.laneGCN import GreatNet, Loss, pre_gather
 import torch.optim as optim
 import random
 from utils import collate_fn
 import logging
 from memory_profiler import profile
+from metrics.metrics import Postprocess
 import gc
+import time
 
 
 
@@ -53,7 +55,7 @@ def train(net,train_loader,loss_f,optimizer,epoch,num_epochs):
         outputs = outputs.cumsum(dim=1) + ctrs
 
         has_pred = pre_gather(data['has_preds']).cuda()
-        gt_pred = pre_gather(data['gt2_preds']).float().cuda()
+        gt_pred = pre_gather(data['gt_preds']).float().cuda()
 
         loss = loss_f(outputs, gt_pred, has_pred)
 
@@ -84,7 +86,7 @@ def val(net,val_loader,loss_f,epoch,num_epochs):
             outputs = outputs.cumsum(dim=1) + ctrs
 
             has_pred = pre_gather(data['has_preds']).cuda()
-            gt_pred = pre_gather(data['gt2_preds']).float().cuda()
+            gt_pred = pre_gather(data['gt_preds']).float().cuda()
 
             loss = loss_f(outputs, gt_pred, has_pred)
             loss_v.append(loss)
@@ -96,10 +98,11 @@ def val(net,val_loader,loss_f,epoch,num_epochs):
 
 
 
-def train1(net,train_loader,loss_f,optimizer,epoch,num_epochs):
+def train1(net,train_loader,loss_f,optimizer,epoch,num_epochs, post):
     # output of the net is directly trajectory
     net.train()
-    loss_t = []
+    metrics = dict()
+    start_time = time.time()
     for batch_idx, data in enumerate(train_loader):
 
         outputs = net(data)
@@ -111,28 +114,25 @@ def train1(net,train_loader,loss_f,optimizer,epoch,num_epochs):
         loss_out['loss'].backward()
         optimizer.step()
 
-        loss_t.append(loss_out['loss'].item())
+        post.append(metrics,loss_out['loss'].item(),outputs,data)
 
-    mean_loss = sum(loss_t)/len(loss_t)
-    msg = 'Epoch [{}/{}], Train_Loss: {:.4f}'.format(epoch+1, num_epochs, mean_loss)
-    print(msg)
-    logging.info(msg)
+    dt = time.time() - start_time
+    post.display(metrics, dt, epoch, num_epochs, "Train")
 
 
-def val1(net,val_loader,loss_f,epoch,num_epochs):
+def val1(net,val_loader,loss_f,epoch,num_epochs,post):
     net.eval()
-    loss_v = []
+    metrics = dict()
+    start_time = time.time()
     with torch.no_grad():
         for batch_idx, data in enumerate(val_loader):
 
             outputs = net(data)
             loss_out = loss_f(outputs,data)
-            loss_v.append(loss_out['loss'].item())
+            post.append(metrics,loss_out['loss'].item(),outputs,data)
     
-    mean_loss = sum(loss_v)/len(loss_v)
-    msg = 'Epoch [{}/{}], Val_Loss: {:.4f}'.format(epoch+1, num_epochs, mean_loss)
-    print(msg)
-    logging.info(msg)
+    dt = time.time() - start_time
+    post.display(metrics, dt, epoch, num_epochs, "Validation")
 
 
 @profile
@@ -146,10 +146,10 @@ def main():
 
     config = dict()
     config['n_actornet'] = 128
-    config['num_epochs'] = 50
-    config['lr'] = 1e-2
-    config['train_split'] = '/home/avt/prediction/Waymo/data_processed/train'
-    config['val_split'] = '/home/avt/prediction/Waymo/data_processed/validation'
+    config['num_epochs'] = 200
+    config['lr'] = 1e-3
+    config['train_split'] = '/home/avt/prediction/Waymo/data_processed/train1'
+    config['val_split'] = '/home/avt/prediction/Waymo/data_processed/val1'
     config["num_scales"] = 6
     config["n_map"] = 128
     config["n_actor"] = 128
@@ -165,12 +165,15 @@ def main():
     config["mgn"] = 0.2
     config["cls_coef"] = 1.0
     config["reg_coef"] = 1.0
+    config["metrics_preds"] = [30,50,80]
 
     net = GreatNet(config)
     net.cuda()
 
     loss_f = Loss(config)
     loss_f.cuda()
+
+    post = Postprocess(config)
 
     optimizer = optim.Adam(net.parameters(), lr = config['lr'])
 
@@ -197,11 +200,11 @@ def main():
     logging.basicConfig(filename=log_file, level=logging.INFO, format=log_format)
 
     for epoch in range(num_epochs):
-        train1(net,train_loader,loss_f,optimizer,epoch,num_epochs)
+        train1(net,train_loader,loss_f,optimizer,epoch,num_epochs,post)
         if (epoch + 1) % 10 == 0:
-            val1(net,val_loader,loss_f,epoch,num_epochs)
+            val1(net,val_loader,loss_f,epoch,num_epochs,post)
+        torch.save(net.state_dict(), 'weights/model_Great_m6_weights.pth')
 
-    torch.save(net.state_dict(), 'model_Great_m6_weights.pth')
 
 if __name__ == "__main__":
     main()

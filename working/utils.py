@@ -127,3 +127,23 @@ def to_world(traj_xy, orig, theta):
     
 
     return traj_xy_r
+
+
+def gather(gts) -> list:
+
+    tmp = list()
+    for i,g in enumerate(gts):
+        zz = torch.stack(g, dim=0)
+        tmp.append(zz)
+    
+    return tmp
+
+
+def pre_gather(gts):
+    tmp = list()
+    for g in gts:
+        tmp += g
+    
+    tmp = torch.stack(tmp)
+
+    return tmp

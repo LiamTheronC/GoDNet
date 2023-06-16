@@ -1,8 +1,10 @@
 import numpy as np
 import torch
+import logging
 
 config = dict()
-config["num_preds"] = [30,50,80]
+config["metrics_preds"] = [30,50,80]
+config['num_mods'] = 6
 
 
 def get_lastIdcs(out,num_pred,data):
@@ -35,14 +37,14 @@ def get_lastIdcs(out,num_pred,data):
     return reg, gt_preds, has_preds, last_idcs, row_idcs
 
 
-def get_minFDE(post_out,num_preds,data):
+def get_minFDE(post_out,data,num_preds,num_mods):
     #num_preds = np.array([30, 50, 80])
     minFDE = []
     for j in range(len(num_preds)):
         reg,gt_preds,_,last_idcs, row_idcs = get_lastIdcs(post_out, num_preds[j],data)
 
         dist_6m = []
-        for i in range(config["num_mods"]):
+        for i in range(num_mods):
 
             rr = reg[row_idcs,i,last_idcs]
             gg = gt_preds[row_idcs,last_idcs].cuda()
@@ -61,14 +63,14 @@ def get_minFDE(post_out,num_preds,data):
     return minFDE
 
 
-def get_minADE(post_out,num_preds,data):
+def get_minADE(post_out,data,num_preds,num_mods):
     #num_preds = np.array([30, 50, 80])
     minADE = []
     for j in range(len(num_preds)):
         reg,gt_preds,has_preds,_,_ = get_lastIdcs(post_out, num_preds[j], data)
 
         dist_6m = []
-        for i in range(config["num_mods"]):
+        for i in range(num_mods):
             
             dist = []
             for j in range(len(reg)):
@@ -89,6 +91,59 @@ def get_minADE(post_out,num_preds,data):
     minADE.append(mean)
     
     return minADE
+
+
+class Postprocess():
+    def __init__(self,config) -> None:
+        self.config = config
+    
+    def append(self,metrics,loss,post_out,data):
+        
+
+        minFDE = get_minFDE(post_out,
+                            data,
+                            config["metrics_preds"],
+                            config["num_mods"])
+        
+        minADE = get_minADE(post_out,
+                            data,
+                            config["metrics_preds"],
+                            config["num_mods"])
+        
+        m = dict()
+        
+        m['loss'] = loss
+        m['fde'] = minFDE[3]
+        m['ade'] = minADE[3]
+
+        for key in m.keys():
+            if key in metrics.keys():
+                metrics[key].append(m[key])
+            else:
+                metrics[key] = [m[key]]
+        
+       
+        return metrics
+
+    def display(self, metrics, dt, epoch, num_epochs, mode="Train"):
+
+        out= []
+        for key in metrics.keys():
+            out.append(sum(metrics[key])/len(metrics[key]))
+    
+        if mode == 'Train':
+            msg1 = ' --- (' + mode + '), Epoch [{}/{}], Time:{:.1f} ---'.format(epoch+1, num_epochs, dt)
+        elif mode == 'Validation':
+            msg1 = ' ***(' + mode + '), Epoch [{}/{}], Time:{:.1f} ***'.format(epoch+1, num_epochs, dt)
+        
+        msg2 = 'loss:{:.2f},fde:{:.2f},ade:{:.2f}'.format(out[0],out[1],out[2])
+
+        print(msg1)
+        print(msg2)
+        logging.info(msg1)
+        logging.info(msg2)
+
+
 
 
 
