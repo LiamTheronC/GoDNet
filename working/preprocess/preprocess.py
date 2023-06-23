@@ -6,13 +6,6 @@ from get_obj_feats import get_obj_feats
 from get_road_info import get_road_info
 from get_dsmp_graph import get_dsmp_graph
 
-config = dict()
-config['pred_range'] = [-100.0, 100.0, -100.0, 100.0]
-config['num_scales'] = 6
-config['cross_dist'] = 6
-config['downsample_factor'] = 10
-config['type_feats'] = 'xyvp' # 'xyz', 'xy'
-
 
 class Waymo_Motion_Preprocess:
     
@@ -59,7 +52,7 @@ class Waymo_Motion_Preprocess:
         """
 
         data = get_obj_states(self.scenario_list, index)
-        data = get_obj_feats(data)
+        data = get_obj_feats(data,self.config['type_feats'])
         data['road_info'] = get_road_info(self.scenario_list, index)
         data['graph'] = get_dsmp_graph(self.config, data)
         

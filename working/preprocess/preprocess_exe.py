@@ -12,21 +12,23 @@ config['pred_range'] = [-100.0, 100.0, -100.0, 100.0]
 config['num_scales'] = 6
 config['cross_dist'] = 6
 config['downsample_factor'] = 10
+config['type_feats'] = 'xyvp'
 
 
 def main():
 
-    train_dataset = Waymo_Motion_DataLoader(config['train'])
-    #train_dataset = Waymo_Motion_DataLoader(config['validation'])
+    #train_dataset = Waymo_Motion_DataLoader(config['train'])
+    train_dataset = Waymo_Motion_DataLoader(config['validation'])
 
     j = 0
     scen_list = train_dataset[j].read_TFRecord
     processed_list = Waymo_Motion_Preprocess(scen_list, config)
     for i,p in enumerate(processed_list):
-        if i > 10:
-            break
-        torch.save(p,'/home/avt/prediction/Waymo/data_processed/train2/'+ str(j) + '_' + str(i)  +'.pt')
-    
+        # if i > 10:
+        #     break
+        #torch.save(p,'/home/avt/prediction/Waymo/data_processed/xyvp/train/'+ str(j) + '_' + str(i)  +'.pt')
+        torch.save(p,'/home/avt/prediction/Waymo/data_processed/xyvp/val/'+ str(j) + '_' + str(i)  +'.pt')
+
 if __name__ == "__main__":
     main()
     
