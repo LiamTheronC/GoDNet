@@ -1,4 +1,5 @@
-# M6 net
+import sys
+sys.path.append('/home/avt/prediction/Waymo/working/')
 
 import numpy as np
 from fractions import gcd
@@ -7,8 +8,8 @@ import torch
 from torch import nn, Tensor
 from torch.nn import functional as F
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
-from utils import to_long, gpu, pre_gather
 from memory_profiler import profile
+from utils import to_long, gpu, pre_gather
 
 
 class PredLoss(nn.Module):
@@ -22,7 +23,7 @@ class PredLoss(nn.Module):
         cls = torch.cat([x for x in cls], 0)
         reg = torch.cat([x for x in reg], 0)
         has_preds = pre_gather(data['has_preds']).cuda()
-        gt_preds = pre_gather(data['gt2_preds']).float()[:,:,:2].cuda()
+        gt_preds = pre_gather(data['gt_preds']).float()[:,:,:2].cuda()
 
         loss_out = dict()
         zero = 0.0 * (cls.sum() + reg.sum())
@@ -78,7 +79,7 @@ class PredLoss(nn.Module):
             reg[has_preds], gt_preds[has_preds]
         )
         loss_out["num_reg"] += has_preds.sum().item()
-        loss_out['reg'] = reg
+
         return loss_out
 
 
@@ -94,4 +95,3 @@ class Loss(nn.Module):
             loss_out["num_cls"] + 1e-10
         ) + loss_out["reg_loss"] / (loss_out["num_reg"] + 1e-10)
         return loss_out
-    

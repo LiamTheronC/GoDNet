@@ -1,6 +1,5 @@
 # M6 training
 
-
 import os
 import numpy as np
 from fractions import gcd

@@ -1,10 +1,11 @@
+import sys
+sys.path.append('/home/avt/prediction/Waymo/working/')
+
 import os
 import numpy as np
 import torch
 import logging
 import matplotlib.pyplot as plt
-import sys
-sys.path.append('/home/avt/prediction/Waymo/working/')
 from utils import pre_gather, gather
 
 config = dict()

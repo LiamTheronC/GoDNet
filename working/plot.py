@@ -102,7 +102,6 @@ def main():
                 post.append(metrics,loss_out['loss'].item(),outputs,data)
                 msg = post.display(metrics, 0, epoch, num_epochs, "Validation")
                 post.plot(metrics, data, outputs, msg, 1)
-
                 break
             break
 

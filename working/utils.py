@@ -1,7 +1,7 @@
 import numpy as np
 import torch
+from torch import Tensor
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 def poly_gon_and_line(poly_dict):
 
@@ -130,6 +130,7 @@ def to_world(traj_xy, orig, theta):
 
 
 def gather(gts) -> list:
+    # make the gt_preds and has_preds List(Tensor)
 
     tmp = list()
     for i,g in enumerate(gts):
@@ -139,7 +140,8 @@ def gather(gts) -> list:
     return tmp
 
 
-def pre_gather(gts):
+def pre_gather(gts) -> Tensor:
+    # make the gt_preds and has_preds into Tensor
     tmp = list()
     for g in gts:
         tmp += g
