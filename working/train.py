@@ -18,6 +18,7 @@ from memory_profiler import profile
 from metrics.metrics import Postprocess
 import gc
 import time
+from datetime import date
 
 
 
@@ -144,6 +145,9 @@ def main():
     np.random.seed(seed)
     random.seed(seed)
 
+    current_date = date.today()
+    dd = current_date.strftime('%m%d')
+
     config = dict()
     config['n_actornet'] = 128
     config['num_epochs'] = 150
@@ -164,9 +168,9 @@ def main():
     config["cls_coef"] = 1.0
     config["reg_coef"] = 1.0
     config["metrics_preds"] = [30,50,80]
-    config["dim_feats"] = {'xyvp':[6,2], 'xyz':[4,3], 'xy':[3,2], 'xyp':[4,2]}
-    config['type_feats'] = 'xyvp'
-    config['f'] = '5f'
+    config["dim_feats"] = {'xyvp':[6,2], 'xyz':[4,3], 'xy':[3,2], 'xyp':[4,2], 'vp':[4,2]}
+    config['type_feats'] = 'vp'
+    config['f'] = '1f'
     config['train_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/train_' + config['f'] 
     config['val_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/val_' + config['f']
 
@@ -202,12 +206,15 @@ def main():
     log_format = '%(asctime)s - %(levelname)s - %(message)s'
     logging.basicConfig(filename=log_file, level=logging.INFO, format=log_format)
 
-    print('Training info: ' + 'LaneGCN' + ',' + config['type_feats'] + ',' + config['f'])
+    msg = 'Training info: ' + 'LaneGCN' + ',' + config['type_feats'] + ',' + config['f']
+    print(msg)
+    logging.info(msg)
+
     for epoch in range(num_epochs):
         train1(net,train_loader,loss_f,optimizer,epoch,num_epochs,post)
         if (epoch + 1) % 10 == 0 or epoch == 0:
             val1(net,val_loader,loss_f,epoch,num_epochs,post)
-        torch.save(net.state_dict(), 'weights/laneGCN_'+ config['type_feats'] + '_' + config['f'] + '623.pth')
+        torch.save(net.state_dict(), 'weights/laneGCN_'+ config['type_feats'] + '_' + config['f'] + dd +'.pth')
 
 
 if __name__ == "__main__":

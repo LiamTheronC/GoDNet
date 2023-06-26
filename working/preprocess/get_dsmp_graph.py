@@ -285,10 +285,10 @@ def get_node_pairs(engage_lanes, left_pairs, right_pairs, config):
         right['u'] += list(idcs_s[mask2.numpy()])
         right['v'] += list(idcs_n[min_idcs.numpy()])
 
-    left['u'] = np.array(left['u'])
-    left['v'] = np.array(left['v'])
-    right['u'] = np.array(right['u'])
-    right['v'] = np.array(right['v'])
+    left['u'] = np.array(left['u'], dtype = int)
+    left['v'] = np.array(left['v'], dtype = int)
+    right['u'] = np.array(right['u'], dtype = int)
+    right['v'] = np.array(right['v'], dtype = int)
     
     lane_idcs = []
     for i, idcs in enumerate(node_idcs):

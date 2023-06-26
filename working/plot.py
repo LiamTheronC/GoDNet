@@ -49,8 +49,6 @@ def main():
     config['n_actornet'] = 128
     config['num_epochs'] = 50
     config['lr'] = 1e-3
-    config['train_split'] = '/home/avt/prediction/Waymo/data_processed/xyvp/train_1f'
-    config['val_split'] = '/home/avt/prediction/Waymo/data_processed/xyvp/val_1f'
     config["num_scales"] = 6
     config["n_map"] = 128
     config["n_actor"] = 128
@@ -67,9 +65,13 @@ def main():
     config["cls_coef"] = 1.0
     config["reg_coef"] = 1.0
     config["metrics_preds"] = [30,50,80]
-    config['model_weights'] = 'weights/laneGCN_xyvp_623.pth'
-    config["dim_feats"] = {'xyvp':[6,2], 'xyz':[4,3], 'xy':[3,2], 'xyp':[4,2]}
-    config['type_feats'] = 'xyvp'
+    
+    config["dim_feats"] = {'xyvp':[6,2], 'xyz':[4,3], 'xy':[3,2], 'xyp':[4,2], 'vp':[4,2]}
+    config['type_feats'] = 'vp'
+    config['f'] = '1f'
+    config['train_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/train_' + config['f'] 
+    config['val_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/val_' + config['f']
+    config['model_weights'] = 'weights/laneGCN_'+ config['type_feats'] + '_' + config['f'] + '623.pth'
 
     net = GreatNet(config)
     net.load_state_dict(torch.load(config['model_weights']))

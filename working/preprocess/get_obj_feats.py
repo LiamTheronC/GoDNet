@@ -44,7 +44,7 @@ def get_obj_feats(data: dict, type_feats = 'xyvp') -> dict:
 
         mask_gt = np.arange(11,91)
 
-        if type_feats == 'xyvp':
+        if type_feats == 'xyvp' or type_feats == 'vp':
 
             feat = np.zeros((11, 6), np.float32)
             traj_xy = traj_xyz[index:, :2]
@@ -87,8 +87,12 @@ def get_obj_feats(data: dict, type_feats = 'xyvp') -> dict:
         gt_pred = data['trajs_xyz'][i][mask_gt][:, :2]
         has_pred = data['valid_masks'][i][mask_gt]
         ctrs.append(feat[-1, :2].copy())
-        feat[1:, :2] -= feat[:-1, :2]
-        feat[index, :2] = 0
+
+        if type_feats == 'vp':
+            feat = feat[:, 2:]
+        else:
+            feat[1:, :2] -= feat[:-1, :2]
+            feat[index, :2] = 0
 
         feats.append(feat) 
         engage_id.append(data['object_ids'][i])

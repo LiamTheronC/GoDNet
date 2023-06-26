@@ -13,9 +13,19 @@ config["metrics_preds"] = [30,50,80]
 config['num_mods'] = 6
 
 
-def get_lastIdcs(out,num_pred,data):
-    cls, reg = out["cls"], out["reg"]
+def get_lastIdcs(p_reg,num_pred,data, target = False):
+    reg = p_reg
     gt_preds, has_preds = gather(data['gt_preds']), gather(data['has_preds'])
+
+    # if target:
+    for i in range(len(reg)):
+        mask = np.array(data['target_indx_e'][i])
+        reg[i] = reg[i][mask]
+        gt_preds[i] = gt_preds[i][mask]
+        has_preds[i] = has_preds[i][mask]
+    
+    print(reg[0].shape, gt_preds[0].shape,has_preds[0].shape)
+
 
 
     reg = torch.cat([x for x in reg], 0)
@@ -43,13 +53,13 @@ def get_lastIdcs(out,num_pred,data):
     return reg, gt_preds, has_preds, last_idcs, row_idcs
 
 
-def get_minFDE(post_out,data,metrics_preds,num_mods):
+def get_minFDE(p_reg,data,metrics_preds,num_mods):
     #num_preds = np.array([30, 50, 80])
     minFDE = []
     f_idcs = []
     for j in range(len(metrics_preds)):
-        reg,gt_preds,_,last_idcs, row_idcs = get_lastIdcs(post_out, metrics_preds[j],data)
-
+        reg,gt_preds,_,last_idcs, row_idcs = get_lastIdcs(p_reg, metrics_preds[j],data)
+        print(reg)
         dist_6m = []
         for i in range(num_mods):
 
@@ -71,11 +81,11 @@ def get_minFDE(post_out,data,metrics_preds,num_mods):
     return minFDE, f_idcs
 
 
-def get_minADE(post_out,data,num_preds,num_mods):
+def get_minADE(p_reg,data,num_preds,num_mods):
     #num_preds = np.array([30, 50, 80])
     minADE = []
     for j in range(len(num_preds)):
-        reg,gt_preds,has_preds,_,_ = get_lastIdcs(post_out, num_preds[j], data)
+        reg,gt_preds,has_preds,_,_ = get_lastIdcs(p_reg, num_preds[j], data)
 
         dist_6m = []
         for i in range(num_mods):
@@ -108,16 +118,17 @@ class Postprocess():
     def append(self,metrics,loss,post_out,data):
         
 
-        minFDE,f_idcs = get_minFDE(post_out,
+        minFDE,f_idcs = get_minFDE(post_out['reg'],
                             data,
                             config["metrics_preds"],
                             config["num_mods"])
+
         
-        minADE = get_minADE(post_out,
+        minADE = get_minADE(post_out['reg'],
                             data,
                             config["metrics_preds"],
                             config["num_mods"])
-        
+
         m = dict()
         
         m['loss'] = loss
@@ -205,4 +216,19 @@ class Postprocess():
         plt.xlabel('x(m)')
         plt.ylabel('y(m)')
         plt.show()
+
+
+def get_target(p_reg,data):
+
+    reg = p_reg
+    indx = data['target_indx_e']
+    gt_preds, has_preds = gather(data['gt_preds']), gather(data['has_preds'])
+    
+    for i in range(len(indx)):
+        mask = torch.tensor(indx[i])
+        reg[i] = reg[i][mask]
+        gt_preds[i] = gt_preds[i][mask]
+        has_preds[i] = has_preds[i][mask]
+    
+    return reg
 
