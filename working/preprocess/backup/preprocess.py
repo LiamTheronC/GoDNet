@@ -12,7 +12,6 @@ config['pred_range'] = [-100.0, 100.0, -100.0, 100.0]
 config['num_scales'] = 6
 config['cross_dist'] = 6
 config['downsample_factor'] = 10
-config['type_feats'] = 'xyvp' # 'xyz', 'xy'
 
 
 class Waymo_Motion_Preprocess_6:

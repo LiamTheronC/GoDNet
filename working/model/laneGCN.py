@@ -1,6 +1,6 @@
 # original lanGCN replication
-# (x,y,z) of history trajectory is utilized
-# output is (x,y)
+# different input features
+
 import sys
 sys.path.append('/home/avt/prediction/Waymo/working/')
 
@@ -11,6 +11,7 @@ from torch.nn import functional as F
 from typing import Dict, List, Tuple, Union
 from utils import to_long, gpu
 
+# config["dim_feats"] = {'xyvp':[6,2], 'xyz':[4,3], 'xy':[3,2],  'xyp':[4,2]}
 
 class Linear(nn.Module):
     def __init__(self, n_in, n_out, norm='GN', ng=32, act=True):
@@ -230,7 +231,7 @@ class ActorNet(nn.Module):
         norm = "GN"
         ng = 1
 
-        n_in = 4
+        n_in = config['dim_feats'][config['type_feats']][0]
         n_out = [32, 64, 128]
         blocks = [Res1d, Res1d, Res1d]
         num_blocks = [2, 2, 2]
@@ -265,7 +266,7 @@ class ActorNet(nn.Module):
         self.outlayer = Res1d(n, n, norm=norm, ng=ng)
 
     def forward(self, actors: Tensor) -> Tensor:
-        #actors [batch_size,feature_dim(4),time_step(11)]
+        #actors [batch_size,feature_dim(),time_step(11)]
         
         out = actors
 
@@ -299,14 +300,15 @@ class MapNet(nn.Module):
         n_map = 128
         norm = "GN"
         ng = 1
+        n_in = config['dim_feats'][config['type_feats']][1]
 
         self.input = nn.Sequential(
-            nn.Linear(3, n_map),
+            nn.Linear(n_in, n_map),
             nn.ReLU(inplace=True),
             Linear(n_map, n_map, norm=norm, ng=ng, act=False),
         )
         self.seg = nn.Sequential(
-            nn.Linear(3, n_map),
+            nn.Linear(n_in, n_map),
             nn.ReLU(inplace=True),
             Linear(n_map, n_map, norm=norm, ng=ng, act=False),
         )
@@ -391,13 +393,15 @@ class MapNet(nn.Module):
 
 
 class Att(nn.Module):
-    def __init__(self, n_agt: int, n_ctx: int) -> None:
+    def __init__(self, n_agt: int, n_ctx: int, config) -> None:
         super(Att, self).__init__()
+        self.config = config
         norm = "GN"
         ng = 1
+        n_in = config['dim_feats'][config['type_feats']][1]
 
         self.dist = nn.Sequential(
-            nn.Linear(3, n_ctx),
+            nn.Linear(n_in, n_ctx),
             nn.ReLU(inplace=True),
             Linear(n_ctx, n_ctx, norm=norm, ng=ng),
         )
@@ -428,11 +432,12 @@ class Att(nn.Module):
         batch_size = len(agt_idcs)
         hi, wi = [], []
         hi_count, wi_count = 0, 0
+        n_c = self.config['dim_feats'][self.config['type_feats']][1]
 
         
         for i in range(batch_size):
         
-            dist = agt_ctrs[i].view(-1, 1, 3) - ctx_ctrs[i].view(1, -1, 3)
+            dist = agt_ctrs[i].view(-1, 1, n_c) - ctx_ctrs[i].view(1, -1, n_c)
             dist = torch.sqrt((dist ** 2).sum(2))
             mask = dist <= dist_th
 
@@ -490,7 +495,7 @@ class A2M(nn.Module):
         self.meta = Linear(n_map, n_map, norm=norm, ng=ng)
         att = []
         for i in range(2):
-            att.append(Att(n_map, config["n_actor"]))
+            att.append(Att(n_map, config["n_actor"], config))
         self.att = nn.ModuleList(att)
 
     def forward(self, feat: Tensor, graph: Dict[str, Union[List[Tensor], Tensor, List[Dict[str, Tensor]], Dict[str, Tensor]]], actors: Tensor, actor_idcs: List[Tensor], actor_ctrs: List[Tensor]) -> Tensor:
@@ -597,7 +602,7 @@ class M2A(nn.Module):
 
         att = []
         for i in range(2):
-            att.append(Att(n_actor, n_map))
+            att.append(Att(n_actor, n_map, config))
         self.att = nn.ModuleList(att)
 
     def forward(self, actors: Tensor, actor_idcs: List[Tensor], actor_ctrs: List[Tensor], nodes: Tensor, node_idcs: List[Tensor], node_ctrs: List[Tensor]) -> Tensor:
@@ -629,7 +634,7 @@ class A2A(nn.Module):
 
         att = []
         for i in range(2):
-            att.append(Att(n_actor, n_actor))
+            att.append(Att(n_actor, n_actor, config))
         self.att = nn.ModuleList(att)
 
     def forward(self, actors: Tensor, actor_idcs: List[Tensor], actor_ctrs: List[Tensor]) -> Tensor:
@@ -677,9 +682,10 @@ class PredNet(nn.Module):
         reg = torch.cat([x.unsqueeze(1) for x in preds], 1)
         reg = reg.view(reg.size(0), reg.size(1), -1, 2)
 
+        n_c = self.config['dim_feats'][self.config['type_feats']][1]
         for i in range(len(actor_idcs)):
             idcs = actor_idcs[i]
-            ctrs = actor_ctrs[i].view(-1, 1, 1, 3)
+            ctrs = actor_ctrs[i].view(-1, 1, 1, n_c)
             reg[idcs] = reg[idcs] + ctrs[:,:,:,:2]
 
         dest_ctrs = reg[:, :, -1].detach()

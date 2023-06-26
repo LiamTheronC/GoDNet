@@ -8,10 +8,11 @@ import torch
 from torch import nn, Tensor
 from torch.utils.data import DataLoader, Dataset
 from torch.nn import functional as F
-from model.laneGCN import GreatNet, Loss, pre_gather
+from model.laneGCN import GreatNet
+from losses.loss import Loss
 import torch.optim as optim
 import random
-from utils import collate_fn
+from utils import collate_fn, pre_gather
 import logging
 from memory_profiler import profile
 from metrics.metrics import Postprocess
@@ -39,61 +40,61 @@ class W_Dataset(Dataset):
 
 
 
-def train(net,train_loader,loss_f,optimizer,epoch,num_epochs):
-    net.train()
-    loss_t = []
-    for batch_idx, data in enumerate(train_loader):
-        #print(feat.shape,gt_pred.shape,has_pred.shape,ctrs.shape)
+# def train(net,train_loader,loss_f,optimizer,epoch,num_epochs):
+#     net.train()
+#     loss_t = []
+#     for batch_idx, data in enumerate(train_loader):
+        
 
-        outputs = net(data)
-        outputs = outputs.view(outputs.size(0),-1,2)
+#         outputs = net(data)
+#         outputs = outputs.view(outputs.size(0),-1,2)
 
-        ctrs = pre_gather(data['ctrs'])
-        ctrs = ctrs[:,:2].unsqueeze(1).cuda()
+#         ctrs = pre_gather(data['ctrs'])
+#         ctrs = ctrs[:,:2].unsqueeze(1).cuda()
 
-        outputs = outputs.cumsum(dim=1) + ctrs
+#         outputs = outputs.cumsum(dim=1) + ctrs
 
-        has_pred = pre_gather(data['has_preds']).cuda()
-        gt_pred = pre_gather(data['gt_preds']).float().cuda()
+#         has_pred = pre_gather(data['has_preds']).cuda()
+#         gt_pred = pre_gather(data['gt_preds']).float().cuda()
 
-        loss = loss_f(outputs, gt_pred, has_pred)
+#         loss = loss_f(outputs, gt_pred, has_pred)
 
-        # Backward and optimize
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
+#         # Backward and optimize
+#         optimizer.zero_grad()
+#         loss.backward()
+#         optimizer.step()
 
-        loss_t.append(loss)
+#         loss_t.append(loss)
 
-    mean_loss = sum(loss_t)/len(loss_t)
-    msg = 'Epoch [{}/{}], Train_Loss: {:.4f}'.format(epoch+1, num_epochs, mean_loss)
-    print(msg)
-    logging.info(msg)
+#     mean_loss = sum(loss_t)/len(loss_t)
+#     msg = 'Epoch [{}/{}], Train_Loss: {:.4f}'.format(epoch+1, num_epochs, mean_loss)
+#     print(msg)
+#     logging.info(msg)
 
 
-def val(net,val_loader,loss_f,epoch,num_epochs):
-    net.eval()
-    loss_v = []
-    with torch.no_grad():
-        for batch_idx, data in enumerate(val_loader):
-            outputs = net(data)
-            outputs = outputs.view(outputs.size(0),-1,2)
+# def val(net,val_loader,loss_f,epoch,num_epochs):
+#     net.eval()
+#     loss_v = []
+#     with torch.no_grad():
+#         for batch_idx, data in enumerate(val_loader):
+#             outputs = net(data)
+#             outputs = outputs.view(outputs.size(0),-1,2)
 
-            ctrs = pre_gather(data['ctrs'])
-            ctrs = ctrs[:,:2].unsqueeze(1).cuda()
+#             ctrs = pre_gather(data['ctrs'])
+#             ctrs = ctrs[:,:2].unsqueeze(1).cuda()
 
-            outputs = outputs.cumsum(dim=1) + ctrs
+#             outputs = outputs.cumsum(dim=1) + ctrs
 
-            has_pred = pre_gather(data['has_preds']).cuda()
-            gt_pred = pre_gather(data['gt_preds']).float().cuda()
+#             has_pred = pre_gather(data['has_preds']).cuda()
+#             gt_pred = pre_gather(data['gt_preds']).float().cuda()
 
-            loss = loss_f(outputs, gt_pred, has_pred)
-            loss_v.append(loss)
+#             loss = loss_f(outputs, gt_pred, has_pred)
+#             loss_v.append(loss)
     
-    mean_loss = sum(loss_v)/len(loss_v)
-    msg = 'Epoch [{}/{}], Val_Loss: {:.4f}'.format(epoch+1, num_epochs, mean_loss)
-    print(msg)
-    logging.info(msg)
+#     mean_loss = sum(loss_v)/len(loss_v)
+#     msg = 'Epoch [{}/{}], Val_Loss: {:.4f}'.format(epoch+1, num_epochs, mean_loss)
+#     print(msg)
+#     logging.info(msg)
 
 
 
@@ -145,10 +146,8 @@ def main():
 
     config = dict()
     config['n_actornet'] = 128
-    config['num_epochs'] = 200
+    config['num_epochs'] = 150
     config['lr'] = 1e-3
-    config['train_split'] = '/home/avt/prediction/Waymo/data_processed/train1'
-    config['val_split'] = '/home/avt/prediction/Waymo/data_processed/val1'
     config["num_scales"] = 6
     config["n_map"] = 128
     config["n_actor"] = 128
@@ -165,6 +164,11 @@ def main():
     config["cls_coef"] = 1.0
     config["reg_coef"] = 1.0
     config["metrics_preds"] = [30,50,80]
+    config["dim_feats"] = {'xyvp':[6,2], 'xyz':[4,3], 'xy':[3,2], 'xyp':[4,2]}
+    config['type_feats'] = 'xyvp'
+    config['f'] = '5f'
+    config['train_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/train_' + config['f'] 
+    config['val_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/val_' + config['f']
 
     net = GreatNet(config)
     net.cuda()
@@ -198,11 +202,12 @@ def main():
     log_format = '%(asctime)s - %(levelname)s - %(message)s'
     logging.basicConfig(filename=log_file, level=logging.INFO, format=log_format)
 
+    print('Training info: ' + 'LaneGCN' + ',' + config['type_feats'] + ',' + config['f'])
     for epoch in range(num_epochs):
         train1(net,train_loader,loss_f,optimizer,epoch,num_epochs,post)
-        if (epoch + 1) % 10 == 0:
+        if (epoch + 1) % 10 == 0 or epoch == 0:
             val1(net,val_loader,loss_f,epoch,num_epochs,post)
-        torch.save(net.state_dict(), 'weights/laneGCN_weights_date.pth')
+        torch.save(net.state_dict(), 'weights/laneGCN_'+ config['type_feats'] + '_' + config['f'] + '623.pth')
 
 
 if __name__ == "__main__":

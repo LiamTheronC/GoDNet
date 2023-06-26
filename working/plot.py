@@ -6,7 +6,8 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader, Dataset
 from torch.nn import functional as F
-from model.laneGCN import GreatNet,Loss,pre_gather
+from model.laneGCN import GreatNet
+from losses.loss import Loss
 import torch.optim as optim
 import random
 from memory_profiler import profile
@@ -48,8 +49,8 @@ def main():
     config['n_actornet'] = 128
     config['num_epochs'] = 50
     config['lr'] = 1e-3
-    config['train_split'] = '/home/avt/prediction/Waymo/data_processed/train1'
-    config['val_split'] = '/home/avt/prediction/Waymo/data_processed/val1'
+    config['train_split'] = '/home/avt/prediction/Waymo/data_processed/xyvp/train_1f'
+    config['val_split'] = '/home/avt/prediction/Waymo/data_processed/xyvp/val_1f'
     config["num_scales"] = 6
     config["n_map"] = 128
     config["n_actor"] = 128
@@ -66,7 +67,9 @@ def main():
     config["cls_coef"] = 1.0
     config["reg_coef"] = 1.0
     config["metrics_preds"] = [30,50,80]
-    config['model_weights'] = 'weights/laneGCN_weights_616.pth'
+    config['model_weights'] = 'weights/laneGCN_xyvp_623.pth'
+    config["dim_feats"] = {'xyvp':[6,2], 'xyz':[4,3], 'xy':[3,2], 'xyp':[4,2]}
+    config['type_feats'] = 'xyvp'
 
     net = GreatNet(config)
     net.load_state_dict(torch.load(config['model_weights']))

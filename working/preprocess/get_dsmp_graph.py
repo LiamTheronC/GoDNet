@@ -21,8 +21,15 @@ def get_dsmp_graph(config, data: dict) -> dict:
     
 
     graph = dict()
-    graph['ctrs'] = np.concatenate(ctrs, 0)
-    graph['feats'] = np.concatenate(feats, 0)
+
+    if config['type_feats'] == 'xyz':
+        graph['ctrs'] = np.concatenate(ctrs, 0)
+        graph['feats'] = np.concatenate(feats, 0)
+
+    else:
+        graph['ctrs'] = np.concatenate(ctrs, 0)[:,:2]
+        graph['feats'] = np.concatenate(feats, 0)[:,:2]
+
     graph['num_nodes'] = num_nodes 
     graph['node_idcs'] = node_idcs
 
@@ -217,8 +224,15 @@ def get_node_pairs(engage_lanes, left_pairs, right_pairs, config):
                     suc['v'].append(node_idcs[j][0])
                 
     #---------------------------left,right-------------------------------#
-    left_u = np.unique(left_pairs[:,0])
-    right_u = np.unique(right_pairs[:,0])
+    if len(left_pairs)!=0:
+        left_u = np.unique(left_pairs[:,0])
+    else:
+        left_u = np.array([],dtype= int)
+
+    if len(right_pairs)!=0:
+        right_u = np.unique(right_pairs[:,0])
+    else:
+        right_u = np.array([],dtype= int)
 
     left, right = dict(), dict()
     left['u'], left['v'], right['u'], right['v'] = [], [], [], []

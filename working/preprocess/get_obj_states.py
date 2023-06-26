@@ -96,7 +96,7 @@ def get_obj_states(scenario_list, index: int) -> dict:
     obj_id, obj_type, obj_valid,obj_traj,obj_velocity_heading,obj_shape = get_tracks_info(scen['tracks'])
 
     ttp_indx = [track['trackIndex'] for track in scen['tracksToPredict']]
-    ttp_indx = np.array(ttp_indx)
+    ttp_indx = np.array(ttp_indx,dtype=int)
 
     data['object_ids'] = obj_id
     data['object_types'] = obj_type
@@ -106,8 +106,8 @@ def get_obj_states(scenario_list, index: int) -> dict:
     data['valid_masks'] = obj_valid
 
     data['target_indx'] = ttp_indx
-    data['target_id'] = np.array(obj_id)[ttp_indx]
-    data['target_type'] = np.array(obj_type)[ttp_indx]
+    data['target_id'] = [obj_id[i] for i in ttp_indx]
+    data['target_type'] = [obj_type[i] for i in ttp_indx]
 
     return data
 
