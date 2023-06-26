@@ -13,20 +13,7 @@ config["metrics_preds"] = [30,50,80]
 config['num_mods'] = 6
 
 
-def get_lastIdcs(p_reg,num_pred,data, target = False):
-    reg = p_reg
-    gt_preds, has_preds = gather(data['gt_preds']), gather(data['has_preds'])
-
-    # if target:
-    for i in range(len(reg)):
-        mask = np.array(data['target_indx_e'][i])
-        reg[i] = reg[i][mask]
-        gt_preds[i] = gt_preds[i][mask]
-        has_preds[i] = has_preds[i][mask]
-    
-    print(reg[0].shape, gt_preds[0].shape,has_preds[0].shape)
-
-
+def get_lastIdcs(reg, num_pred, gt_preds, has_preds):
 
     reg = torch.cat([x for x in reg], 0)
     gt_preds = torch.cat([x for x in gt_preds], 0)
@@ -53,13 +40,17 @@ def get_lastIdcs(p_reg,num_pred,data, target = False):
     return reg, gt_preds, has_preds, last_idcs, row_idcs
 
 
-def get_minFDE(p_reg,data,metrics_preds,num_mods):
+def get_minFDE(reg,data,metrics_preds,num_mods, target = False):
     #num_preds = np.array([30, 50, 80])
     minFDE = []
     f_idcs = []
+
+    gt_preds, has_preds = gather(data['gt_preds']), gather(data['has_preds'])
+    
+    r_t,g_t,h_t = get_target(reg,gt_preds, has_preds,data['target_indx_e'],target)
+
     for j in range(len(metrics_preds)):
-        reg,gt_preds,_,last_idcs, row_idcs = get_lastIdcs(p_reg, metrics_preds[j],data)
-        print(reg)
+        reg,gt_preds,_,last_idcs, row_idcs = get_lastIdcs(r_t, metrics_preds[j], g_t, h_t)
         dist_6m = []
         for i in range(num_mods):
 
@@ -81,11 +72,14 @@ def get_minFDE(p_reg,data,metrics_preds,num_mods):
     return minFDE, f_idcs
 
 
-def get_minADE(p_reg,data,num_preds,num_mods):
+def get_minADE(reg,data,metrics_preds,num_mods,target = False):
     #num_preds = np.array([30, 50, 80])
     minADE = []
-    for j in range(len(num_preds)):
-        reg,gt_preds,has_preds,_,_ = get_lastIdcs(p_reg, num_preds[j], data)
+    gt_preds, has_preds = gather(data['gt_preds']), gather(data['has_preds'])
+    r_t,g_t,h_t = get_target(reg,gt_preds, has_preds,data['target_indx_e'],target)
+
+    for j in range(len(metrics_preds)):
+        reg,gt_preds,has_preds,_,_ = get_lastIdcs(r_t, metrics_preds[j], g_t, h_t)
 
         dist_6m = []
         for i in range(num_mods):
@@ -128,12 +122,27 @@ class Postprocess():
                             data,
                             config["metrics_preds"],
                             config["num_mods"])
+        
+        minF,t_idcs = get_minFDE(post_out['reg'],
+                            data,
+                            config["metrics_preds"],
+                            config["num_mods"],
+                            True)
+        
+        minA = get_minADE(post_out['reg'],
+                            data,
+                            config["metrics_preds"],
+                            config["num_mods"],
+                            True)
+
 
         m = dict()
         
         m['loss'] = loss
         m['fde'] = minFDE[2]
         m['ade'] = minADE[2]
+        m['Tfde'] = minF[2]
+        m['Tade'] = minA[2]
         m['f_idcs'] = f_idcs
 
         for key in m.keys():
@@ -150,7 +159,7 @@ class Postprocess():
 
         out= []
         for key in metrics.keys():
-            if key in ['loss','fde','ade']:
+            if key in ['loss','fde','ade','Tfde','Tade']:
                 out.append(sum(metrics[key])/len(metrics[key]))
     
         if mode == 'Train':
@@ -158,7 +167,7 @@ class Postprocess():
         elif mode == 'Validation':
             msg1 = ' ***(' + mode + '), Epoch [{}/{}], Time:{:.1f} ***'.format(epoch+1, num_epochs, dt)
         
-        msg2 = 'loss:{:.2f} --- fde:{:.2f} --- ade:{:.2f}'.format(out[0],out[1],out[2])
+        msg2 = 'loss:{:.2f} -- fde:{:.2f} -- ade:{:.2f} -- Tfde:{:.2f} -- Tade:{:.2f}'.format(out[0],out[1],out[2],out[3],out[4])
 
         print(msg1)
         print(msg2)
@@ -168,32 +177,43 @@ class Postprocess():
         return msg2
     
 
-    def plot(self, metrics, data, outputs, msg, key = 1):
+    def plot(self, metrics, data, outputs, msg, key = 1, target = False):
 
         f_idcs = metrics['f_idcs'][0][2]
         row_idcs = torch.tensor(range(len(f_idcs)))
+        reg = outputs['reg']
 
-        gt_pred, has_pred = pre_gather(data['gt_preds']), pre_gather(data['has_preds'])
+        g_t, h_t = gather(data['gt_preds']), gather(data['has_preds'])
+        r_t,g_t,h_t = get_target(reg,g_t, h_t,data['target_indx_e'], target)
+
+        # the final sets for plot
+        regs, gt_preds,has_preds,_,_ = get_lastIdcs(r_t, 80, g_t, h_t)
         
         # prediction
         if key == 1:# plot only the minFDE of each object
-            regs = outputs['reg'][0][row_idcs,f_idcs].cpu().detach()
-            for j,reg in enumerate(regs):
-                plt.plot(reg[has_pred[j]].T[0],reg[has_pred[j]].T[1],color='green',linewidth=0.8)
+            regs = regs[row_idcs,f_idcs].cpu().detach()
+            for j in range(len(regs)):
+                line = regs[j][has_preds[j]]
+                plt.plot(line.T[0],line.T[1],color='green',linewidth=0.8)
+
         elif key == 6:# plot all the six outputs of each object
-            regs = outputs['reg'][0]
             for i in range(config["num_mods"]):
-                reg = regs[:,i].cpu().detach()
-                for j,z in enumerate(reg):
-                    plt.plot(z[has_pred[j]].T[0],z[has_pred[j]].T[1],color='green',linewidth=0.8)
-        
+                ri = regs[:,i].cpu().detach()
+                for j in range(len(ri)):
+                    line = ri[j][has_preds[j]]
+                    plt.plot(line.T[0],line.T[1],color='green', linestyle='--', linewidth=0.8)
+            
+            regs = regs[row_idcs,f_idcs].cpu().detach()
+            for j in range(len(regs)):
+                line = regs[j][has_preds[j]]
+                plt.plot(line.T[0], line.T[1], color='green', linewidth=1.0)
         
         # ground truth
-        for i, gt in enumerate(gt_pred):
-            tmp = gt[has_pred[i]]
-            if len(tmp)>0:
-                plt.plot(tmp.T[0],tmp.T[1],color='red', linewidth = 1.0, linestyle='--')
-                plt.scatter(tmp.T[0][0],tmp.T[1][0],s=30, color ='red')
+        for j in range(len(gt_preds)):
+            line = gt_preds[j][has_preds[j]]
+            if len(line) > 0:
+                plt.plot(line.T[0],line.T[1],color='red', linewidth = 1.0, linestyle='--')
+                plt.scatter(line.T[0][0],line.T[1][0],s=30, color ='red')
         
         # graph
         rot = data['rot'][0]
@@ -218,17 +238,24 @@ class Postprocess():
         plt.show()
 
 
-def get_target(p_reg,data):
+def get_target(reg, gt_preds, has_preds, indx,target):
+    """
+    return only the info of targets_to_predict if target is True
 
-    reg = p_reg
-    indx = data['target_indx_e']
-    gt_preds, has_preds = gather(data['gt_preds']), gather(data['has_preds'])
-    
-    for i in range(len(indx)):
-        mask = torch.tensor(indx[i])
-        reg[i] = reg[i][mask]
-        gt_preds[i] = gt_preds[i][mask]
-        has_preds[i] = has_preds[i][mask]
-    
-    return reg
+    Return: List[Tensors]
 
+    """
+
+    if target:
+        r,g,h=[],[],[]
+    
+        for i in range(len(indx)):
+            mask = torch.tensor(indx[i])
+            r.append(reg[i][mask])
+            g.append(gt_preds[i][mask])
+            h.append(has_preds[i][mask])
+        
+        return r, g, h
+    
+    else:
+        return reg, gt_preds, has_preds

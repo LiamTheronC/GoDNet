@@ -4929,3 +4929,8 @@
 2023-06-26 15:13:15,348 - INFO - loss:0.92 --- fde:1.60 --- ade:0.71
 2023-06-26 15:14:17,330 - INFO -  --- (Train), Epoch [87/150], Time:61.8 ---
 2023-06-26 15:14:17,330 - INFO - loss:0.94 --- fde:1.65 --- ade:0.74
+2023-06-26 19:37:25,391 - INFO - Training info: LaneGCN,xyvp,5f
+2023-06-26 19:41:39,840 - INFO -  ***(Validation), Epoch [1/150], Time:254.4 ***
+2023-06-26 19:41:39,840 - INFO - loss:12.53 -- fde:16.83 -- ade:9.38 -- Tfde:48.83 -- Tade:24.99
+2023-06-26 19:44:33,454 - INFO - Training info: LaneGCN,xyvp,5f
+2023-06-26 19:56:23,792 - INFO - Training info: LaneGCN,xy,1f
