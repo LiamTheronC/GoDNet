@@ -6,7 +6,7 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader, Dataset
 from torch.nn import functional as F
-from model.laneGCN import GreatNet
+from model.GANet import GreatNet
 from losses.loss import Loss
 import torch.optim as optim
 import random
@@ -67,11 +67,12 @@ def main():
     config["metrics_preds"] = [30,50,80]
     
     config["dim_feats"] = {'xyvp':[6,2], 'xyz':[4,3], 'xy':[3,2], 'xyp':[4,2], 'vp':[4,2]}
-    config['type_feats'] = 'xyvp'
-    config['f'] = '5f'
+    config['type_feats'] = 'vp'
+    config['f'] = '1f'
+    config['name'] = 'GANet'
     config['train_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/train_' + config['f'] 
     config['val_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/val_' + config['f']
-    config['model_weights'] = 'weights/laneGCN_'+ config['type_feats'] + '_' + config['f'] + '0626.pth'
+    config['model_weights'] = 'weights/'+ config['name'] + '_' + config['type_feats'] + '_' + config['f'] + '0627.pth'
 
     net = GreatNet(config)
     net.load_state_dict(torch.load(config['model_weights']))

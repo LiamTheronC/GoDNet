@@ -8,7 +8,7 @@ import torch
 from torch import nn, Tensor
 from torch.utils.data import DataLoader, Dataset
 from torch.nn import functional as F
-from model.laneGCN import GreatNet
+from model.GANet import GreatNet # GANet, laneGCN
 from losses.loss import Loss
 import torch.optim as optim
 import random
@@ -155,8 +155,8 @@ def main():
     config["num_scales"] = 6
     config["n_map"] = 128
     config["n_actor"] = 128
-    config["actor2map_dist"] = 7.0
-    config["map2actor_dist"] = 6.0
+    config["actor2map_dist"] = 7.0 # 7.0
+    config["map2actor_dist"] = 6.0 # 6.0
     config["actor2actor_dist"] = 100.0
     config["num_mods"] = 6
     config["pred_size"] = 80
@@ -169,8 +169,9 @@ def main():
     config["reg_coef"] = 1.0
     config["metrics_preds"] = [30,50,80]
     config["dim_feats"] = {'xyvp':[6,2], 'xyz':[4,3], 'xy':[3,2], 'xyp':[4,2], 'vp':[4,2]}
-    config['type_feats'] = 'xyvp'
-    config['f'] = '5f'
+    config['type_feats'] = 'vp'
+    config['f'] = '1f'
+    config['name'] = 'GANet'
     config['train_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/train_' + config['f'] 
     config['val_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/val_' + config['f']
 
@@ -206,7 +207,7 @@ def main():
     log_format = '%(asctime)s - %(levelname)s - %(message)s'
     logging.basicConfig(filename=log_file, level=logging.INFO, format=log_format)
 
-    msg = 'Training info: ' + 'LaneGCN' + ',' + config['type_feats'] + ',' + config['f']
+    msg = 'Training info: ' + config['name'] + ',' + config['type_feats'] + ',' + config['f']
     print(msg)
     logging.info(msg)
 
@@ -214,7 +215,7 @@ def main():
         train1(net,train_loader,loss_f,optimizer,epoch,num_epochs,post)
         if (epoch + 1) % 10 == 0 or epoch == 0:
             val1(net,val_loader,loss_f,epoch,num_epochs,post)
-        torch.save(net.state_dict(), 'weights/laneGCN_'+ config['type_feats'] + '_' + config['f'] + dd +'.pth')
+        torch.save(net.state_dict(), 'weights/'+ config['name'] +'_'+ config['type_feats'] + '_' + config['f'] + dd +'.pth')
 
 
 if __name__ == "__main__":

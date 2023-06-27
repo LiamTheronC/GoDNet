@@ -4,7 +4,7 @@
 import sys
 sys.path.append('/home/avt/prediction/Waymo/working/')
 
-from fractions import gcd
+from math import gcd
 import torch
 from torch import nn, Tensor
 from torch.nn import functional as F
@@ -269,6 +269,8 @@ class ActorNet(nn.Module):
         #actors [batch_size,feature_dim(),time_step(11)]
         
         out = actors
+        pad = torch.ones(out.size(0),out.size(1),1).cuda()
+        out = torch.cat((pad,out),2)
 
         outputs = []
         for i in range(len(self.groups)):
@@ -281,9 +283,6 @@ class ActorNet(nn.Module):
 
             out = F.interpolate(out, scale_factor=2, mode="linear", align_corners=False)
             tmp = self.lateral[i](outputs[i])
-
-            if out.shape != tmp.shape:
-                out = out[:,:,:tmp.shape[2]]
 
             out += tmp
         
@@ -630,7 +629,6 @@ class A2A(nn.Module):
         ng = 1
 
         n_actor = config["n_actor"]
-        n_map = config["n_map"]
 
         att = []
         for i in range(2):
@@ -731,6 +729,92 @@ class AttDest(nn.Module):
 
         agts = torch.cat((dist, agts), 1)
         agts = self.agt(agts)
+        return agts
+
+
+class SpAtt(nn.Module):
+    def __init__(self, n_agt: int, n_ctx: int, config) -> None:
+        super(Att, self).__init__()
+        self.config = config
+        norm = "GN"
+        ng = 1
+        n_in = config['dim_feats'][config['type_feats']][1]
+
+        self.dist = nn.Sequential(
+            nn.Linear(n_in, n_ctx),
+            nn.ReLU(inplace=True),
+            Linear(n_ctx, n_ctx, norm=norm, ng=ng),
+        )
+
+        self.query = Linear(n_agt, n_ctx, norm=norm, ng=ng)
+
+        self.ctx = nn.Sequential(
+            Linear(3 * n_ctx, n_agt, norm=norm, ng=ng),
+            nn.Linear(n_agt, n_agt, bias=False),
+        )
+
+        self.agt = nn.Linear(n_agt, n_agt, bias=False)
+        self.norm = nn.GroupNorm(gcd(ng, n_agt), n_agt)
+        self.linear = Linear(n_agt, n_agt, norm=norm, ng=ng, act=False)
+        self.relu = nn.ReLU(inplace=True)
+
+    def forward(self, agts: Tensor, agt_idcs: List[Tensor], agt_ctrs: List[Tensor], ctx: Tensor, ctx_idcs: List[Tensor], ctx_ctrs: List[Tensor], dist_th: float) -> Tensor:
+        # ctx = nodes, agts = objects
+        # get the features of nodes(current, 6 sucs) into  objects
+        res = agts
+        if len(ctx) == 0:
+            agts = self.agt(agts)
+            agts = self.relu(agts)
+            agts = self.linear(agts)
+            agts += res
+            agts = self.relu(agts)
+            return agts
+
+        batch_size = len(agt_idcs)
+        hi, wi = [], []
+        hi_count, wi_count = 0, 0
+        n_c = self.config['dim_feats'][self.config['type_feats']][1]
+
+        
+        for i in range(batch_size):
+        
+            dist = agt_ctrs[i].view(-1, 1, n_c) - ctx_ctrs[i].view(1, -1, n_c)
+            dist = torch.sqrt((dist ** 2).sum(2))
+            mask = dist <= dist_th
+
+            idcs = torch.nonzero(mask, as_tuple=False)
+            if len(idcs) == 0:
+                continue
+
+            hi.append(idcs[:, 0] + hi_count)
+            wi.append(idcs[:, 1] + wi_count)
+            hi_count += len(agt_idcs[i])
+            wi_count += len(ctx_idcs[i])
+
+
+        hi = torch.cat(hi, 0)
+        wi = torch.cat(wi, 0)
+
+        agt_ctrs = torch.cat(agt_ctrs, 0)
+        ctx_ctrs = torch.cat(ctx_ctrs, 0)
+        dist = agt_ctrs[hi] - ctx_ctrs[wi]
+        dist = self.dist(dist)
+
+        query = self.query(agts[hi])
+
+        ctx = ctx[wi]
+        ctx = torch.cat((dist, query, ctx), 1)
+        ctx = self.ctx(ctx)
+
+        agts = self.agt(agts)
+        agts.index_add_(0, hi, ctx)
+        agts = self.norm(agts)
+        agts = self.relu(agts)
+
+        agts = self.linear(agts)
+        agts += res
+        agts = self.relu(agts)
+
         return agts
 
 
