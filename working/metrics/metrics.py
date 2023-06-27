@@ -201,7 +201,7 @@ class Postprocess():
                 ri = regs[:,i].cpu().detach()
                 for j in range(len(ri)):
                     line = ri[j][has_preds[j]]
-                    plt.plot(line.T[0],line.T[1],color='green', linestyle='--', linewidth=0.8)
+                    plt.plot(line.T[0],line.T[1],color='green', linestyle='--', linewidth=0.8, alpha = 0.2)
             
             regs = regs[row_idcs,f_idcs].cpu().detach()
             for j in range(len(regs)):

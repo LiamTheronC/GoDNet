@@ -67,11 +67,11 @@ def main():
     config["metrics_preds"] = [30,50,80]
     
     config["dim_feats"] = {'xyvp':[6,2], 'xyz':[4,3], 'xy':[3,2], 'xyp':[4,2], 'vp':[4,2]}
-    config['type_feats'] = 'vp'
-    config['f'] = '1f'
+    config['type_feats'] = 'xyvp'
+    config['f'] = '5f'
     config['train_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/train_' + config['f'] 
     config['val_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/val_' + config['f']
-    config['model_weights'] = 'weights/laneGCN_'+ config['type_feats'] + '_' + config['f'] + '623.pth'
+    config['model_weights'] = 'weights/laneGCN_'+ config['type_feats'] + '_' + config['f'] + '0626.pth'
 
     net = GreatNet(config)
     net.load_state_dict(torch.load(config['model_weights']))
@@ -106,7 +106,7 @@ def main():
                 loss_out = loss_f(outputs,data)
                 post.append(metrics,loss_out['loss'].item(),outputs,data)
                 msg = post.display(metrics, 0, epoch, num_epochs, "Validation")
-                post.plot(metrics, data, outputs, msg, 1)
+                post.plot(metrics, data, outputs, msg, 6)
                 break
             break
 
