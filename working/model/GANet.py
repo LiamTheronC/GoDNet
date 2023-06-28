@@ -480,8 +480,119 @@ class Att(nn.Module):
         return agts
 
 
+# class SpAtt(nn.Module):
+#     # Sparse spatial attention module for m2a
+#     def __init__(self, n_agt: int, n_ctx: int, config) -> None:
+#         super(SpAtt, self).__init__()
+#         self.config = config
+#         norm = "GN"
+#         ng = 1
+#         n_in = config['dim_feats'][config['type_feats']][1]
+
+#         self.dist = nn.Sequential(
+#             nn.Linear(n_in, n_ctx),
+#             nn.ReLU(inplace=True),
+#             Linear(n_ctx, n_ctx, norm=norm, ng=ng),
+#         )
+
+#         self.query = Linear(n_agt, n_ctx, norm=norm, ng=ng)
+
+#         self.ctx = nn.Sequential(
+#             Linear(3 * n_ctx, n_agt, norm=norm, ng=ng),
+#             nn.Linear(n_agt, n_agt, bias=False),
+#         )
+
+#         self.agt = nn.Linear(n_agt, n_agt, bias=False)
+#         self.norm = nn.GroupNorm(gcd(ng, n_agt), n_agt)
+#         self.linear = Linear(n_agt, n_agt, norm=norm, ng=ng, act=False)
+#         self.relu = nn.ReLU(inplace=True)
+
+#     def forward(self, agts: Tensor, agt_idcs: List[Tensor], agt_ctrs: List[Tensor], ctx: Tensor, ctx_idcs: List[Tensor], ctx_ctrs: List[Tensor], dist_th: float, graph: Dict) -> Tensor:
+#         # ctx = nodes, agts = objects
+#         # get the features of nodes(current, 6 sucs) into  objects
+#         res = agts
+#         if len(ctx) == 0:
+#             agts = self.agt(agts)
+#             agts = self.relu(agts)
+#             agts = self.linear(agts)
+#             agts += res
+#             agts = self.relu(agts)
+#             return agts
+
+#         batch_size = len(agt_idcs)
+#         hi, wi = [], []
+#         hi_count, wi_count = 0, 0
+#         n_c = self.config['dim_feats'][self.config['type_feats']][1]
+
+        
+#         for i in range(batch_size):
+
+#             dist = agt_ctrs[i].view(-1, 1, n_c) - ctx_ctrs[i].view(1, -1, n_c)
+#             dist = torch.sqrt((dist ** 2).sum(2))
+#             mask = dist <= dist_th
+
+#             idcs = torch.nonzero(mask, as_tuple=False)
+
+#             if len(idcs) == 0:
+#                 continue
+
+#             hi.append(idcs[:, 0] + hi_count)
+#             wi.append(idcs[:, 1] + wi_count)
+#             hi_count += len(agt_idcs[i])
+#             wi_count += len(ctx_idcs[i])
+
+
+#         hi = torch.cat(hi, 0)
+#         wi = torch.cat(wi, 0)
+
+#         agt_ctrs = torch.cat(agt_ctrs, 0)
+#         ctx_ctrs = torch.cat(ctx_ctrs, 0)
+
+#         #(1) get the sparse matrix of (hi, wi)
+#         #(2) have the sparse matrix of (wi, suc_i) in graph['suc']
+#         #(3) get the sparse matrix of (hi, suc_i)
+
+#         num_agts = len(agt_ctrs)
+#         num_nodes = len(ctx_ctrs)
+#         dd = np.ones(len(hi), bool)
+#         sp_hw = sparse.csr_matrix((dd, (hi, wi)), shape=(num_agts, num_nodes))
+#         sp_final = sp_hw.copy()
+
+#         for i in range(len(graph['suc'])):
+#             u = graph['suc'][i]['u']
+#             v = graph['suc'][i]['v']
+#             dd = np.ones(len(u), bool)
+#             sp_uv = sparse.csr_matrix((dd, (u, v)), shape=(num_nodes, num_nodes))
+#             sp_final += sp_hw * sp_uv 
+
+#         hi,wi = sp_final.nonzero()
+
+#         hi = torch.tensor(hi).cuda()
+#         wi = torch.tensor(wi).cuda()
+
+#         # conduct sparse spatial attention given (hi, wi)
+#         dist = agt_ctrs[hi] - ctx_ctrs[wi]
+#         dist = self.dist(dist)
+
+#         query = self.query(agts[hi])
+
+#         ctx = ctx[wi]
+#         ctx = torch.cat((dist, query, ctx), 1)
+#         ctx = self.ctx(ctx)
+
+#         agts = self.agt(agts)
+#         agts.index_add_(0, hi, ctx)
+#         agts = self.norm(agts)
+#         agts = self.relu(agts)
+
+#         agts = self.linear(agts)
+#         agts += res
+#         agts = self.relu(agts)
+
+#         return agts
+
+
 class SpAtt(nn.Module):
-    # Sparse spatial attention module for m2a
     def __init__(self, n_agt: int, n_ctx: int, config) -> None:
         super(SpAtt, self).__init__()
         self.config = config
@@ -547,28 +658,33 @@ class SpAtt(nn.Module):
         agt_ctrs = torch.cat(agt_ctrs, 0)
         ctx_ctrs = torch.cat(ctx_ctrs, 0)
 
+        # get the indx of all the sucs given wi
         #(1) get the sparse matrix of (hi, wi)
         #(2) have the sparse matrix of (wi, suc_i) in graph['suc']
         #(3) get the sparse matrix of (hi, suc_i)
 
         num_agts = len(agt_ctrs)
         num_nodes = len(ctx_ctrs)
-        dd = np.ones(len(hi), bool)
-        sp_hw = sparse.csr_matrix((dd, (hi, wi)), shape=(num_agts, num_nodes))
-        sp_final = sp_hw.copy()
+
+        indcs = torch.stack((hi,wi))
+        value = torch.ones(len(hi)).cuda()
+        size = torch.Size([num_agts, num_nodes])
+        sp_hw = torch.sparse_coo_tensor(indcs, value, size)
+        sp_final = sp_hw.clone()
 
         for i in range(len(graph['suc'])):
             u = graph['suc'][i]['u']
             v = graph['suc'][i]['v']
-            dd = np.ones(len(u), bool)
-            sp_uv = sparse.csr_matrix((dd, (u, v)), shape=(num_nodes, num_nodes))
-            sp_final += sp_hw * sp_uv 
+            indcs = torch.stack((u,v))
+            value = torch.ones(len(u)).cuda()
+            size = torch.Size([num_nodes, num_nodes])
+            sp_uv = torch.sparse_coo_tensor(indcs, value, size)
+            sp_final += torch.matmul(sp_hw,sp_uv)
 
-        hi,wi = sp_final.nonzero()
-        hi = torch.tensor(hi)
-        wi = torch.tensor(wi)
+        hi = sp_final.coalesce().indices()[0]
+        wi = sp_final.coalesce().indices()[1]
 
-        # conduct sparse spatial attention given (hi, wi)
+        # conduct sparse spatial attention given (hi, suc_i)
         dist = agt_ctrs[hi] - ctx_ctrs[wi]
         dist = self.dist(dist)
 

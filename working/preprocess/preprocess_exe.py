@@ -13,8 +13,8 @@ config['num_scales'] = 6
 config['cross_dist'] = 6
 config['downsample_factor'] = 10
 config["dim_feats"] = {'xyvp':[6,2], 'xyz':[4,3], 'xy':[3,2], 'xyp':[4,2], 'vp':[4,2]}
-config['type_feats'] = 'xy'
-config['f'] = '1f'
+config['type_feats'] = 'vp'
+config['f'] = '5f'
 
 
 def main():
