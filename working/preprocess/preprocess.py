@@ -52,7 +52,7 @@ class Waymo_Motion_Preprocess:
         """
 
         data = get_obj_states(self.scenario_list, index)
-        data = get_obj_feats(data,self.config['type_feats'])
+        data = get_obj_feats(data,self.config['type_feats'], self.config['aug'])
         data['road_info'] = get_road_info(self.scenario_list, index)
         data['graph'] = get_dsmp_graph(self.config, data)
         

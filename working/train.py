@@ -8,7 +8,7 @@ import torch
 from torch import nn, Tensor
 from torch.utils.data import DataLoader, Dataset
 from torch.nn import functional as F
-from model.GANet import GreatNet # GANet, laneGCN
+from model.laneGCN import GreatNet # GANet, laneGCN
 from losses.loss import Loss
 import torch.optim as optim
 import random
@@ -121,7 +121,7 @@ def train1(net,train_loader,loss_f,optimizer,epoch,num_epochs, post):
     post.display(metrics, dt, epoch, num_epochs, "Train")
 
 
-def val1(net,val_loader,loss_f,epoch,num_epochs,post):
+def val1(net,val_loader,loss_f,epoch,num_epochs,post,loss_a, config):
     net.eval()
     metrics = dict()
     start_time = time.time()
@@ -133,7 +133,14 @@ def val1(net,val_loader,loss_f,epoch,num_epochs,post):
             post.append(metrics,loss_out['loss'].item(),outputs,data)
     
     dt = time.time() - start_time
-    post.display(metrics, dt, epoch, num_epochs, "Validation")
+    _, loss = post.display(metrics, dt, epoch, num_epochs, "Validation")
+
+    if loss < loss_a:
+        print('update weights')
+        torch.save(net.state_dict(), 'weights/'+ config['name'] +'_'+ config['type_feats'] + '_' + config['f'] + config['dd'] +'.pth')
+        loss_a = loss
+
+    return loss_a
 
 
 @profile
@@ -144,9 +151,6 @@ def main():
     torch.cuda.manual_seed(seed)
     np.random.seed(seed)
     random.seed(seed)
-
-    current_date = date.today()
-    dd = current_date.strftime('%m%d')
 
     config = dict()
     config['n_actornet'] = 128
@@ -169,11 +173,12 @@ def main():
     config["reg_coef"] = 1.0
     config["metrics_preds"] = [30,50,80]
     config["dim_feats"] = {'xyvp':[6,2], 'xyz':[4,3], 'xy':[3,2], 'xyp':[4,2], 'vp':[4,2]}
-    config['type_feats'] = 'vp'
-    config['f'] = '5f'
-    config['name'] = 'GANet'
+    config['type_feats'] = 'xy'
+    config['f'] = '1f'
+    config['name'] = 'laneGCN'
     config['train_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/train_' + config['f'] 
     config['val_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/val_' + config['f']
+    config['dd'] = date.today().strftime('%m%d')
 
     net = GreatNet(config)
     net.cuda()
@@ -211,11 +216,11 @@ def main():
     print(msg)
     logging.info(msg)
 
+    loss_a = 100
     for epoch in range(num_epochs):
         train1(net,train_loader,loss_f,optimizer,epoch,num_epochs,post)
         if (epoch + 1) % 10 == 0 or epoch == 0:
-            val1(net,val_loader,loss_f,epoch,num_epochs,post)
-        torch.save(net.state_dict(), 'weights/'+ config['name'] +'_'+ config['type_feats'] + '_' + config['f'] + dd +'.pth')
+            loss_a = val1(net,val_loader,loss_f,epoch,num_epochs, post, loss_a, config)
 
 
 if __name__ == "__main__":

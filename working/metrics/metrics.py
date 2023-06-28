@@ -174,7 +174,7 @@ class Postprocess():
         logging.info(msg1)
         logging.info(msg2)
 
-        return msg2
+        return msg2,out[0]
     
 
     def plot(self, metrics, data, outputs, msg, key = 1, target = False):

@@ -4,18 +4,24 @@ import sys
 sys.path.append('/home/avt/prediction/Waymo/working/')
 import numpy as np
 from utils import to_local
+import random
 
 
-def get_obj_feats(data: dict, type_feats = 'xyvp') -> dict:
+def get_obj_feats(data: dict, type_feats = 'xyvp', aug = False) -> dict:
 
     # type_feats indicates different type of feats, 'xyvp' or 'xyz' or 'xy' or 'xyp'
+
 
     orig = data['trajs_xyz'][data['sdc_index']][data['current_time_index']]
     pre_orig = data['trajs_xyz'][data['sdc_index']][data['current_time_index']-1]
     
     dir_vec = pre_orig - orig
     
-    theta = np.pi - np.arctan2(dir_vec[1], dir_vec[0])
+    if aug:
+        theta = random.uniform(0, 2*np.pi)
+    else:
+        theta = np.pi - np.arctan2(dir_vec[1], dir_vec[0])
+
     rot = np.asarray([
                 [np.cos(theta), -np.sin(theta)],
                 [np.sin(theta), np.cos(theta)]], np.float32)
