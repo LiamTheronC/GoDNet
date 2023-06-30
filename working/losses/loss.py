@@ -83,15 +83,41 @@ class PredLoss(nn.Module):
         return loss_out
 
 
+class MidLoss(nn.Module):
+    def __init__(self, config) -> None:
+        super(MidLoss, self).__init__()
+        self.config = config
+        self.reg_loss = nn.SmoothL1Loss(reduction="sum")
+    
+    def forward(self, out: Dict[str, List[Tensor]], data) -> Dict[str, Union[Tensor, int]]:
+
+        mid_out = dict()
+        mid_num = self.config['mid_num']
+
+        mid = pre_gather(out['mid'])
+        has_mid = pre_gather(data['has_preds'])[:, mid_num - 1].cuda()
+        gt_mid = pre_gather(data['gt_preds']).float()[:, mid_num - 1,:2].cuda()
+
+        mid_out['loss'] = self.reg_loss(mid[has_mid],gt_mid[has_mid])
+        mid_out['num'] = has_mid.sum().item()
+
+        return mid_out
+
+
+
 class Loss(nn.Module):
     def __init__(self, config):
         super(Loss, self).__init__()
         self.config = config
         self.pred_loss = PredLoss(config)
+        self.mid_loss = MidLoss(config)
 
     def forward(self, out: Dict, data: Dict) -> Dict:
         loss_out = self.pred_loss(out, data)
+        mid_out = self.mid_loss(out,data)
+
         loss_out["loss"] = loss_out["cls_loss"] / (
             loss_out["num_cls"] + 1e-10
-        ) + loss_out["reg_loss"] / (loss_out["num_reg"] + 1e-10)
+        ) + loss_out["reg_loss"] / (loss_out["num_reg"] + 1e-10) + mid_out['loss']/(mid_out['num'] + 1e-10)
+       
         return loss_out
