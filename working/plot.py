@@ -68,7 +68,7 @@ def main():
     
     config["dim_feats"] = {'xyvp':[6,2], 'xyz':[4,3], 'xy':[3,2], 'xyp':[4,2], 'vp':[4,2]}
     config['type_feats'] = 'xy'
-    config['f'] = '1f'
+    config['f'] = '10f'
     config['name'] = 'laneGCN'
     config['train_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/train_' + config['f'] 
     config['val_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/val_' + config['f']
