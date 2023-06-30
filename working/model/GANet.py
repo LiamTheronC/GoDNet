@@ -754,13 +754,13 @@ class MidG2A(nn.Module):
         self.att = nn.ModuleList(att)
 
 
-    def forward(self, actors: Tensor, actor_idcs: List[Tensor], nodes: Tensor, node_idcs: List[Tensor], node_ctrs: List[Tensor]) -> Tensor:      
+    def forward(self, actors: Tensor, actor_idcs: List[Tensor], actor_ctrs: List[Tensor], nodes: Tensor, node_idcs: List[Tensor], node_ctrs: List[Tensor]) -> Tensor:      
             
             mid_out = self.pred(actors)
 
             mid = []
             for i in range(len(actor_idcs)):
-                 mid.append(mid_out[actor_idcs[i]])
+                 mid.append(mid_out[actor_idcs[i]] + actor_ctrs[i])
             
             for i in range(len(self.att)):
                 actors = self.att[i](
@@ -904,7 +904,7 @@ class GreatNet(nn.Module):
         actors = self.m2a(actors, actor_idcs, actor_ctrs, nodes, node_idcs, node_ctrs)
         actors = self.a2a(actors, actor_idcs, actor_ctrs) #(A,128)
 
-        actors, mid = self.mg(actors,actor_idcs, nodes, node_idcs, node_ctrs) # mid (A,2)
+        actors, mid = self.mg(actors,actor_idcs, actor_ctrs, nodes, node_idcs, node_ctrs) # mid (A,2)
         actors = self.a2a(actors, actor_idcs, mid) #(A,128)
 
         

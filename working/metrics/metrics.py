@@ -50,7 +50,7 @@ def get_minFDE(reg,data,metrics_preds,num_mods, target = False):
     r_t,g_t,h_t = get_target(reg,gt_preds, has_preds,data['target_indx_e'],target)
 
     for j in range(len(metrics_preds)):
-        reg,gt_preds,_,last_idcs, row_idcs = get_lastIdcs(r_t, metrics_preds[j], g_t, h_t)
+        reg, gt_preds,_,last_idcs, row_idcs = get_lastIdcs(r_t, metrics_preds[j], g_t, h_t)
         dist_6m = []
         for i in range(num_mods):
 
