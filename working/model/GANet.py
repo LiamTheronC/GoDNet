@@ -731,6 +731,7 @@ class A2A(nn.Module):
             )
         return actors
 
+
 class Mid(nn.Module):
     def __init__(self, config) -> None:
         super(Mid,self).__init__()
@@ -808,9 +809,9 @@ class Mid2A(nn.Module):
         #m2a with mid goals of highest cls scores    
             cls = torch.cat(mid_out['cls'],0)
             mid = torch.cat(mid_out['mid'],0)
-            values, indices = cls.max(1)
-            row_indices = range(len(indices))
-            mid = mid[row_indices,indices]
+            values, min_idcs = cls.max(1)
+            row_idcs = torch.arange(len(min_idcs)).long().to(min_idcs.device)
+            mid = mid[row_idcs,min_idcs]
 
             mid_list = []
             for i in range(len(actor_idcs)):
@@ -828,7 +829,7 @@ class Mid2A(nn.Module):
                     self.config["map2actor_dist"],
                 )
 
-            return actors
+            return actors, mid_list
 
 
 
@@ -961,18 +962,19 @@ class GreatNet(nn.Module):
         actors = self.a2a(actors, actor_idcs, actor_ctrs) #(A,128)
 
         mid_out = self.mid(actors,actor_idcs,actor_ctrs)
-        actors= self.mid2a(actors, actor_idcs, mid_out, nodes, node_idcs, node_ctrs) # mid (A,2)
-        #actors = self.a2a(actors, actor_idcs, mid) #(A,128)
+        actors, mid_list = self.mid2a(actors, actor_idcs, mid_out, nodes, node_idcs, node_ctrs) # mid (A,2)
+        actors = self.a2a(actors, actor_idcs, mid_list) #(A,128)
 
         
         out = self.pred_net(actors, actor_idcs, actor_ctrs)
-        out['mid'] = []
+        out['mid'] = mid_out['mid']
+        out['m_cls'] = mid_out['cls']
         rot, orig = gpu(data['rot']), gpu(data['orig'])
 
         # to_global
         for i in range(len(out['reg'])):
             out['reg'][i] = torch.matmul(out['reg'][i], rot[i]) + orig[i][:2].view(1, 1, 1, -1)
-            out['mid'].append(torch.matmul(mid[i], rot[i]) + orig[i][:2])
+            out['mid'][i] = torch.matmul(out['mid'][i], rot[i]) + orig[i][:2].view(1, 1, -1)
 
         return out
 
