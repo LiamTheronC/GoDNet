@@ -731,11 +731,66 @@ class A2A(nn.Module):
             )
         return actors
 
-
-
-class MidG2A(nn.Module):
+class Mid(nn.Module):
     def __init__(self, config) -> None:
-        super(MidG2A,self).__init__()
+        super(Mid,self).__init__()
+        self.config = config
+        norm = "GN"
+        ng = 1
+
+        n_actor = config["n_actor"]
+
+        pred = []
+        for i in range(config["num_mods"]):
+            pred.append(
+                nn.Sequential(
+                    LinearRes(n_actor, n_actor, norm=norm, ng=ng),
+                    LinearRes(n_actor, n_actor, norm=norm, ng=ng),
+                    nn.Linear(n_actor, 2),
+                )
+            )
+        self.pred = nn.ModuleList(pred)
+        
+        self.att_dest = AttDest(n_actor)
+        self.cls = nn.Sequential(
+            LinearRes(n_actor, n_actor, norm=norm, ng=ng), 
+            nn.Linear(n_actor, 1)
+        )
+
+
+
+    def forward(self, actors: Tensor, actor_idcs: List[Tensor], actor_ctrs: List[Tensor]) -> Tensor:      
+            
+            preds = []
+            for i in range(len(self.pred)):
+                preds.append(self.pred[i](actors))
+            
+            mid = torch.cat([x.unsqueeze(1) for x in preds], 1)
+
+            
+            for i in range(len(actor_idcs)):
+                 idcs = actor_idcs[i]
+                 mid[idcs] += actor_ctrs[i].unsqueeze(1)
+            
+            feats = self.att_dest(actors, torch.cat(actor_ctrs, 0), mid)
+            cls = self.cls(feats).view(-1, self.config["num_mods"])
+
+
+            mid_out = dict()
+            mid_out['cls'],mid_out['mid'] = [], []
+            for i in range(len(actor_idcs)):
+                idcs = actor_idcs[i]
+                mid_out["cls"].append(cls[idcs])
+                mid_out["mid"].append(mid[idcs])
+
+
+            return mid_out
+
+
+
+class Mid2A(nn.Module):
+    def __init__(self, config) -> None:
+        super(Mid2A,self).__init__()
         self.config = config
         norm = "GN"
         ng = 1
@@ -743,37 +798,37 @@ class MidG2A(nn.Module):
         n_actor = config["n_actor"]
         n_map = config["n_map"]
 
-        self.pred = nn.Sequential(
-                    LinearRes(n_actor, 2 * n_actor, norm=norm, ng=ng),
-                    LinearRes(2 * n_actor, n_actor, norm=norm, ng=ng),
-                    nn.Linear(n_actor, 2))
-
         att = []
         for i in range(2):
             att.append(Att(n_actor, n_map, config))
         self.att = nn.ModuleList(att)
 
 
-    def forward(self, actors: Tensor, actor_idcs: List[Tensor], actor_ctrs: List[Tensor], nodes: Tensor, node_idcs: List[Tensor], node_ctrs: List[Tensor]) -> Tensor:      
-            
-            mid_out = self.pred(actors)
+    def forward(self, actors: Tensor, actor_idcs: List[Tensor], mid_out: List[Tensor], nodes: Tensor, node_idcs: List[Tensor], node_ctrs: List[Tensor]) -> Tensor:      
+        #m2a with mid goals of highest cls scores    
+            cls = torch.cat(mid_out['cls'],0)
+            mid = torch.cat(mid_out['mid'],0)
+            values, indices = cls.max(1)
+            row_indices = range(len(indices))
+            mid = mid[row_indices,indices]
 
-            mid = []
+            mid_list = []
             for i in range(len(actor_idcs)):
-                 mid.append(mid_out[actor_idcs[i]] + actor_ctrs[i])
+                mid_list.append(mid[actor_idcs[i]])
+
             
             for i in range(len(self.att)):
                 actors = self.att[i](
                     actors,
                     actor_idcs,
-                    mid,
+                    mid_list,
                     nodes,
                     node_idcs,
                     node_ctrs,
                     self.config["map2actor_dist"],
                 )
 
-            return actors, mid
+            return actors
 
 
 
@@ -875,7 +930,8 @@ class GreatNet(nn.Module):
         self.m2a = M2A(config)
         self.a2a = A2A(config)
 
-        self.mg = MidG2A(config)
+        self.mid = Mid(config)
+        self.mid2a = Mid2A(config)
         
         self.pred_net = PredNet(config)
     
@@ -904,8 +960,9 @@ class GreatNet(nn.Module):
         actors = self.m2a(actors, actor_idcs, actor_ctrs, nodes, node_idcs, node_ctrs)
         actors = self.a2a(actors, actor_idcs, actor_ctrs) #(A,128)
 
-        actors, mid = self.mg(actors,actor_idcs, actor_ctrs, nodes, node_idcs, node_ctrs) # mid (A,2)
-        actors = self.a2a(actors, actor_idcs, mid) #(A,128)
+        mid_out = self.mid(actors,actor_idcs,actor_ctrs)
+        actors= self.mid2a(actors, actor_idcs, mid_out, nodes, node_idcs, node_ctrs) # mid (A,2)
+        #actors = self.a2a(actors, actor_idcs, mid) #(A,128)
 
         
         out = self.pred_net(actors, actor_idcs, actor_ctrs)
