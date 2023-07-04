@@ -192,7 +192,7 @@ def main():
     optimizer = optim.Adam(net.parameters(), lr = config['lr'])
 
     batch_size = 4
-    dataset_train = W_Dataset(config['train_split'])
+    dataset_train = W_Dataset(config['val_split'])
     train_loader = DataLoader(dataset_train, 
                            batch_size = batch_size ,
                            collate_fn = collate_fn, 

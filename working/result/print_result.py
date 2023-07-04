@@ -13,6 +13,7 @@ result['xyvp_5f'] = 'loss:1.17 -- fde:1.91 -- ade:0.79 -- Tfde:7.23 -- Tade:2.89
 result['vp_5f'] = 'loss:1.10 -- fde:1.72 -- ade:0.73 -- Tfde:6.56 -- Tade:2.69' # sparse spatial attention
 result['xy_10f_lanGCN'] = 'loss:0.97 -- fde:1.51 -- ade:0.65 -- Tfde:5.71 -- Tade:2.36'
 result['xy_10f_GANet'] = 'loss:2.43 -- fde:1.53 -- ade:0.68 -- Tfde:5.73 -- Tade:2.44'
+result['xy_10f_GANet'] = 'loss:1.66 -- fde:1.45 -- ade:0.63 -- Tfde:5.51 -- Tade:2.28'
 
 
 def main():

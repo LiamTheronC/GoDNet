@@ -72,7 +72,7 @@ def main():
     config['name'] = 'GANet'
     config['train_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/train_' + config['f'] 
     config['val_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/val_' + config['f']
-    config['model_weights'] = 'weights/'+ config['name'] + '_' + config['type_feats'] + '_' + config['f'] + '0630.pth'
+    config['model_weights'] = 'weights/'+ config['name'] + '_' + config['type_feats'] + '_' + config['f'] + '0703.pth'
 
     net = GreatNet(config)
     net.load_state_dict(torch.load(config['model_weights']))
