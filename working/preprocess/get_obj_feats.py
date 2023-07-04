@@ -115,7 +115,7 @@ def get_obj_feats(data: dict, type_feats = 'xyvp', aug = False) -> dict:
     data['has_preds'] = has_preds
 
     target_indx_e = [list(engage_id).index(id) for id in data['target_id']]
-    data['target_indx_e'] = target_indx_e
+    data['target_indx_e'] = np.array(target_indx_e,dtype=int)
     
     return data
     

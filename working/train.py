@@ -8,8 +8,8 @@ import torch
 from torch import nn, Tensor
 from torch.utils.data import DataLoader, Dataset
 from torch.nn import functional as F
-from model.GANet import GreatNet # GANet, laneGCN
-from losses.loss import Loss
+from model.laneGCN import GreatNet # GANet, laneGCN
+from losses.loss import Loss, Loss2, Loss3
 import torch.optim as optim
 import random
 from utils import collate_fn, pre_gather
@@ -112,10 +112,10 @@ def train1(net,train_loader,loss_f,optimizer,epoch,num_epochs, post):
 
         # Backward and optimize
         optimizer.zero_grad()
-        loss_out['loss'].backward()
+        loss_out.backward()
         optimizer.step()
 
-        post.append(metrics,loss_out['loss'].item(),outputs,data)
+        post.append(metrics,loss_out.item(),outputs,data)
 
     dt = time.time() - start_time
     post.display(metrics, dt, epoch, num_epochs, "Train")
@@ -130,7 +130,7 @@ def val1(net,val_loader,loss_f,epoch,num_epochs,post,loss_a, config):
 
             outputs = net(data)
             loss_out = loss_f(outputs,data)
-            post.append(metrics,loss_out['loss'].item(),outputs,data)
+            post.append(metrics,loss_out.item(),outputs,data)
     
     dt = time.time() - start_time
     _, loss = post.display(metrics, dt, epoch, num_epochs, "Validation")
@@ -176,7 +176,7 @@ def main():
     config["dim_feats"] = {'xyvp':[6,2], 'xyz':[4,3], 'xy':[3,2], 'xyp':[4,2], 'vp':[4,2]}
     config['type_feats'] = 'xy'
     config['f'] = '10f'
-    config['name'] = 'GANet'
+    config['name'] = 'laneGCN'
     config['train_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/train_' + config['f'] 
     config['val_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/val_' + config['f']
     config['dd'] = date.today().strftime('%m%d')
@@ -184,7 +184,7 @@ def main():
     net = GreatNet(config)
     net.cuda()
 
-    loss_f = Loss(config)
+    loss_f = Loss3(config)
     loss_f.cuda()
 
     post = Postprocess(config)
@@ -192,7 +192,7 @@ def main():
     optimizer = optim.Adam(net.parameters(), lr = config['lr'])
 
     batch_size = 4
-    dataset_train = W_Dataset(config['val_split'])
+    dataset_train = W_Dataset(config['train_split'])
     train_loader = DataLoader(dataset_train, 
                            batch_size = batch_size ,
                            collate_fn = collate_fn, 

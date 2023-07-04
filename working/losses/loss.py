@@ -18,12 +18,33 @@ class PredLoss(nn.Module):
         self.config = config
         self.reg_loss = nn.SmoothL1Loss(reduction="sum")
 
-    def forward(self, out: Dict[str, List[Tensor]], data) -> Dict[str, Union[Tensor, int]]:
+    def forward(self, out: Dict[str, List[Tensor]], data, target= False) -> Dict[str, Union[Tensor, int]]:
         cls, reg = out["cls"], out["reg"]
+
+        num = torch.tensor([len(x) for x in cls])
+
         cls = torch.cat([x for x in cls], 0)
         reg = torch.cat([x for x in reg], 0)
         has_preds = pre_gather(data['has_preds']).cuda()
         gt_preds = pre_gather(data['gt_preds']).float()[:,:,:2].cuda()
+
+        if target:
+
+            indx = [torch.tensor(x) for x in data['target_indx_e']]
+            num = torch.cumsum(num,0)[:-1]
+
+            indx_cum = []
+            indx_cum.append(indx[0])
+            
+            for ii in range(len(num)):
+                indx_cum.append(indx[ii+1] + num[ii].item())
+
+            indx_final = torch.cat(indx_cum,0)
+
+            cls = cls[indx_final]
+            reg = reg[indx_final]
+            has_preds = has_preds[indx_final]
+            gt_preds = gt_preds[indx_final]
 
         loss_out = dict()
         zero = 0.0 * (cls.sum() + reg.sum())
@@ -132,10 +153,26 @@ class MidLoss(nn.Module):
 
 
 
-
 class Loss(nn.Module):
     def __init__(self, config):
         super(Loss, self).__init__()
+        self.config = config
+        self.pred_loss = PredLoss(config)
+
+    def forward(self, out: Dict, data: Dict, target = False) -> Dict:
+        loss_out = self.pred_loss(out, data)
+        loss = loss_out["cls_loss"] / (
+            loss_out["num_cls"] + 1e-10) + loss_out["reg_loss"] / (
+            loss_out["num_reg"] + 1e-10)
+ 
+        return loss
+
+
+
+class Loss2(nn.Module):
+    # integrate mid goal loss
+    def __init__(self, config):
+        super(Loss2, self).__init__()
         self.config = config
         self.pred_loss = PredLoss(config)
         self.mid_loss = MidLoss(config)
@@ -144,11 +181,33 @@ class Loss(nn.Module):
         loss_out = self.pred_loss(out, data)
         mid_out = self.mid_loss(out,data)
 
-        loss_out["loss"] = loss_out["cls_loss"] / (
+        loss = loss_out["cls_loss"] / (
             loss_out["num_cls"] + 1e-10) + loss_out["reg_loss"] / (
             loss_out["num_reg"] + 1e-10) + mid_out['reg_loss'] / (
             mid_out['num_reg'] + 1e-10) + mid_out['cls_loss'] / (
             mid_out["num_cls"] + 1e-10
         )
        
-        return loss_out
+        return loss
+    
+
+class Loss3(nn.Module):
+    def __init__(self, config):
+        super(Loss3, self).__init__()
+        self.config = config
+        self.pred_loss = PredLoss(config)
+
+    def forward(self, out: Dict, data: Dict) -> Dict:
+        loss_out = self.pred_loss(out, data)
+        loss_all = loss_out["cls_loss"] / (
+            loss_out["num_cls"] + 1e-10) + loss_out["reg_loss"] / (
+            loss_out["num_reg"] + 1e-10)
+
+        t_out = self.pred_loss(out, data,True)
+        loss_t = t_out["cls_loss"] / (
+        t_out["num_cls"] + 1e-10) + t_out["reg_loss"] / (
+        t_out["num_reg"] + 1e-10)
+
+        loss = loss_t  + loss_all * 0.1
+       
+        return loss

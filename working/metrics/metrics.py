@@ -13,6 +13,30 @@ config["metrics_preds"] = [30,50,80]
 config['num_mods'] = 6
 
 
+# def get_lastIdcs(reg, gt_preds, has_preds, num_pred):
+
+#     reg = torch.cat([x for x in reg], 0)
+#     gt_preds = torch.cat([x for x in gt_preds], 0)
+#     has_preds = torch.cat([x for x in has_preds], 0)
+
+
+#     last = has_preds.float() + 0.1 * torch.arange(num_pred).float().to(
+#                 has_preds.device
+#             ) / float(num_pred)
+
+#     max_last, last_idcs = last.max(1)
+#     mask = max_last >1.0
+
+#     reg = reg[mask]
+#     gt_preds = gt_preds[mask][:,:,:2]
+#     has_preds = has_preds[mask]
+#     last_idcs = last_idcs[mask]
+
+#     row_idcs = torch.arange(len(last_idcs)).long().to(last_idcs.device)
+
+#     return reg, gt_preds, has_preds, last_idcs, row_idcs
+
+
 def get_lastIdcs(reg, num_pred, gt_preds, has_preds):
 
     reg = torch.cat([x for x in reg], 0)
@@ -47,7 +71,7 @@ def get_minFDE(reg,data,metrics_preds,num_mods, target = False):
 
     gt_preds, has_preds = gather(data['gt_preds']), gather(data['has_preds'])
     
-    r_t,g_t,h_t = get_target(reg,gt_preds, has_preds,data['target_indx_e'],target)
+    r_t,g_t,h_t = get_target(reg, gt_preds, has_preds, data['target_indx_e'],target)
 
     for j in range(len(metrics_preds)):
         reg, gt_preds,_,last_idcs, row_idcs = get_lastIdcs(r_t, metrics_preds[j], g_t, h_t)
@@ -70,6 +94,76 @@ def get_minFDE(reg,data,metrics_preds,num_mods, target = False):
     minFDE.append(mean)
 
     return minFDE, f_idcs
+
+
+
+# def get_minFDE(reg, data, num_preds, num_mods):
+#     #num_preds = np.array([30, 50, 80])
+#     minFDE = []
+#     gt_preds, has_preds = gather(data['gt_preds']), gather(data['has_preds'])
+
+#     indx_final = get_tarIndx(reg, data)
+
+#     reg = torch.cat([x for x in reg], 0)
+#     gt_preds = torch.cat([x for x in gt_preds], 0)
+#     has_preds = torch.cat([x for x in has_preds], 0)
+
+
+
+#     reg, gt_preds,_,last_idcs, row_idcs = get_lastIdcs(reg, gt_preds, has_preds, num_preds)
+    
+#     dist_6m = []
+
+#     for i in range(num_mods):
+
+#         rr = reg[row_idcs,i,last_idcs]
+#         gg = gt_preds[row_idcs,last_idcs].cuda()
+#         dist = torch.sqrt(((rr - gg)**2).sum(1))
+#         dist_6m.append(dist.clone().detach().view(-1,1))
+
+#     zz = torch.cat(dist_6m,1)
+#     min_dist, min_idcs = zz.min(1)
+#     fde = min_dist.mean().item()
+
+#     minFDE.append(fde)
+    
+#     mean = torch.tensor(minFDE).mean().item()
+#     minFDE.append(mean)
+
+#     return minFDE
+
+
+# def get_minADE(reg,data,metrics_preds,num_mods,target = False):
+#     #num_preds = np.array([30, 50, 80])
+#     minADE = []
+#     gt_preds, has_preds = gather(data['gt_preds']), gather(data['has_preds'])
+#     r_t,g_t,h_t = get_target(reg,gt_preds, has_preds,data['target_indx_e'],target)
+
+#     for j in range(len(metrics_preds)):
+#         reg,gt_preds,has_preds,_,_ = get_lastIdcs(r_t, metrics_preds[j], g_t, h_t)
+
+#         dist_6m = []
+#         for i in range(num_mods):
+            
+#             dist = []
+#             for j in range(len(reg)):
+#                 rr = reg[j][i]
+#                 gg = gt_preds[j].cuda()
+#                 hh = has_preds[j].cuda()
+#                 dd = torch.sqrt(((rr[hh] - gg[hh])**2).sum(1))
+#                 dist.append(dd.mean().item())
+            
+#             dist_6m.append(torch.tensor(dist).view(-1,1))
+
+#         zz = torch.cat(dist_6m,1)
+#         min_dist, min_idcs = zz.min(1)
+#         ade = min_dist.mean().item()
+#         minADE.append(ade)
+
+#     mean = torch.tensor(minADE).mean().item()
+#     minADE.append(mean)
+    
+#     return minADE
 
 
 def get_minADE(reg,data,metrics_preds,num_mods,target = False):
@@ -259,3 +353,22 @@ def get_target(reg, gt_preds, has_preds, indx,target):
     
     else:
         return reg, gt_preds, has_preds
+
+
+
+
+# def get_tarIndx(reg, data):
+
+#     indx = [torch.tensor(x) for x in data['target_indx_e']]
+#     num = torch.tensor([len(x) for x in reg])
+#     num = torch.cumsum(num,0)[:-1]
+
+#     indx_cum = []
+#     indx_cum.append(indx[0])
+    
+#     for ii in range(len(num)):
+#         indx_cum.append(indx[ii+1] + num[ii].item())
+
+#     indx_final = torch.cat(indx_cum,0)
+
+#     return indx_final
