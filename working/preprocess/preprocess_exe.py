@@ -16,7 +16,10 @@ config["dim_feats"] = {'xyvp':[6,2], 'xyz':[4,3], 'xy':[3,2], 'xyp':[4,2], 'vp':
 config['type_feats'] = 'vpt'
 config['f'] = '1f'
 config['aug'] = False
-
+config['light'] = True
+config['delete'] = ['scenario_id', 'time_stamps', 'current_time_index',
+                    'sdc_index', 'objects_of_interest', 'object_ids', 'object_types',
+                    'velocity_xy_heading', 'shapes', 'road_info']
 
 def main():
 
@@ -31,11 +34,23 @@ def main():
     j = 0
     scen_list = train_dataset[j].read_TFRecord
     processed_list = Waymo_Motion_Preprocess(scen_list, config)
-    for i,p in enumerate(processed_list):
-        # if i > 2:
-        #     break
-        torch.save(p,'/home/avt/prediction/Waymo/data_processed/'+ config['type_feats'] + '/'+ word +'_' + config['f'] + '/'+ str(j) + '_' + str(i)  +'.pt')
-        
+
+    if config['light']:
+        for i,p in enumerate(processed_list):
+            # if i > 2:
+            #     break
+
+            for key in config['delete']:
+                del p[key]
+                
+            torch.save(p,'/home/avt/prediction/Waymo/data_processed/'+ config['type_feats'] + '/'+ word +'_' + config['f'] + '/'+ str(j) + '_' + str(i)  +'.pt')
+    
+    else:
+        for i,p in enumerate(processed_list):
+            # if i > 2:
+            #     break
+            torch.save(p,'/home/avt/prediction/Waymo/data_processed/'+ config['type_feats'] + '/'+ word +'_' + config['f'] + '/'+ str(j) + '_' + str(i)  +'.pt')
+            
 
 if __name__ == "__main__":
     main()

@@ -373,7 +373,7 @@ def get_target(reg, gt_preds, has_preds, indx,target):
 
 #     return indx_final
 
-def panorama(data,path):
+def panorama(data, path = False):
 
     rot = data['rot']
     orig = data['orig']
@@ -447,4 +447,8 @@ def panorama(data,path):
     plt.gca().set_aspect('equal')
     plt.xlabel('x(m)')
     plt.ylabel('y(m)')
-    plt.savefig(path, dpi=2000)
+
+    if path:
+        plt.savefig(path, dpi=2000)
+    else:
+        plt.show()

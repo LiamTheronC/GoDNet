@@ -5,6 +5,7 @@ from get_obj_states import get_obj_states
 from get_obj_feats import get_obj_feats
 from get_road_info import get_road_info
 from get_dsmp_graph import get_dsmp_graph
+from get_marking import get_marking
 
 
 class Waymo_Motion_Preprocess:
@@ -55,6 +56,7 @@ class Waymo_Motion_Preprocess:
         data = get_obj_feats(data,self.config['type_feats'], self.config['aug'])
         data['road_info'] = get_road_info(self.scenario_list, index)
         data['graph'] = get_dsmp_graph(self.config, data)
+        data['marking'] = get_marking(self.config, data)
         
         return data
     

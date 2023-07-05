@@ -5,7 +5,7 @@ import numpy as np
 from scipy import sparse
 import copy
 import torch
-from utils import bboxes_overlapping,bboxes_of_poly, to_local
+from utils import bboxes_overlapping,bboxes_of_poly, to_local,dsmp
 
 
 def get_dsmp_graph(config, data: dict) -> dict:
@@ -321,10 +321,3 @@ def get_nodes(engage_lanes,config):
     
     return ctrs, feats, node_idcs, num_nodes
 
-
-def dsmp(ctrln, df):
-
-    if len(ctrln) <= df:
-        df = len(ctrln) - 1
-
-    return ctrln[::df]

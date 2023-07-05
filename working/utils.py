@@ -149,3 +149,11 @@ def pre_gather(gts) -> Tensor:
     tmp = torch.stack(tmp)
 
     return tmp
+
+
+def dsmp(ctrln, df):
+
+    if len(ctrln) <= df:
+        df = len(ctrln) - 1
+
+    return ctrln[::df]
