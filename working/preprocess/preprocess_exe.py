@@ -12,15 +12,15 @@ config['pred_range'] = [-100.0, 100.0, -100.0, 100.0]
 config['num_scales'] = 6
 config['cross_dist'] = 6
 config['downsample_factor'] = 10
-config["dim_feats"] = {'xyvp':[6,2], 'xyz':[4,3], 'xy':[3,2], 'xyp':[4,2], 'vp':[4,2]}
-config['type_feats'] = 'xy'
+config["dim_feats"] = {'xyvp':[6,2], 'xyz':[4,3], 'xy':[3,2], 'xyp':[4,2], 'vp':[4,2], 'vpt':[5,2]}
+config['type_feats'] = 'vpt'
 config['f'] = '1f'
 config['aug'] = False
 
 
 def main():
 
-    path = config['val']
+    path = config['train']
 
     if path == config['train']:
         word = 'train'
@@ -32,7 +32,7 @@ def main():
     scen_list = train_dataset[j].read_TFRecord
     processed_list = Waymo_Motion_Preprocess(scen_list, config)
     for i,p in enumerate(processed_list):
-        # if i > 10:
+        # if i > 2:
         #     break
         torch.save(p,'/home/avt/prediction/Waymo/data_processed/'+ config['type_feats'] + '/'+ word +'_' + config['f'] + '/'+ str(j) + '_' + str(i)  +'.pt')
         

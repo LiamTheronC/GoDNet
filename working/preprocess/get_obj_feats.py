@@ -32,6 +32,12 @@ def get_obj_feats(data: dict, type_feats = 'xyvp', aug = False) -> dict:
 
     feats, ctrs, gt_preds, has_preds, engage_id, engage_indx = [], [], [], [], [], []
 
+    types_ = dict()
+    types_['TYPE_VEHICLE'] = 1.0
+    types_['TYPE_PEDESTRIAN'] = 2.0
+    types_['TYPE_CYCLIST'] = 3.0
+
+
     for i in range(len(data['object_ids'])):
         
         traj_xyz = data['trajs_xyz'][i][:11]
@@ -50,7 +56,27 @@ def get_obj_feats(data: dict, type_feats = 'xyvp', aug = False) -> dict:
 
         mask_gt = np.arange(11,91)
 
-        if type_feats == 'xyvp' or type_feats == 'vp':
+        if type_feats == 'vpt':
+            feat = np.zeros((11, 5), np.float32)
+            vel = vel[index:]
+            heading = heading[index:]
+
+            feat[index:,:2] = to_local(vel,np.array([0.0,0.0]),theta)
+            feat[index:,2] = heading + theta
+            feat[index:,3] = types_[data['object_types'][i]]
+            feat[index:,4] = 1.0
+
+        if type_feats == 'vp':
+            feat = np.zeros((11, 4), np.float32)
+            vel = vel[index:]
+            heading = heading[index:]
+
+            feat[index:,:2] = to_local(vel,np.array([0.0,0.0]),theta)
+            feat[index:,2] = heading + theta
+            feat[index:,3] = 1.0
+
+
+        if type_feats == 'xyvp':
 
             feat = np.zeros((11, 6), np.float32)
             traj_xy = traj_xyz[index:, :2]
@@ -94,11 +120,10 @@ def get_obj_feats(data: dict, type_feats = 'xyvp', aug = False) -> dict:
         has_pred = data['valid_masks'][i][mask_gt]
         ctrs.append(feat[-1, :2].copy())
 
-        if type_feats == 'vp':
-            feat = feat[:, 2:]
-        else:
+        if type_feats[0] == 'x':
             feat[1:, :2] -= feat[:-1, :2]
             feat[index, :2] = 0
+
 
         feats.append(feat) 
         engage_id.append(data['object_ids'][i])

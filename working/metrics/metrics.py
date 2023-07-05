@@ -372,3 +372,79 @@ def get_target(reg, gt_preds, has_preds, indx,target):
 #     indx_final = torch.cat(indx_cum,0)
 
 #     return indx_final
+
+def panorama(data,path):
+
+    rot = data['rot']
+    orig = data['orig']
+    ctrs = data['graph']['ctrs'][:, :2]
+    ctrs = np.matmul(ctrs, rot) + orig[:2]
+    plt.scatter(ctrs.T[0] ,ctrs.T[1], c = 'black',s = 0.05)
+
+    lanes = data['road_info']['lane']
+    if data['road_info']['dynamic_map']:
+        d_lanes = data['road_info']['dynamic_map'].keys()
+        for l in d_lanes:
+            line = lanes[l]['polyline']
+            plt.plot(line.T[0],line.T[1],color = 'red', linewidth = 0.5)
+
+    if 'crosswalk' in data['road_info'].keys():
+        crosswalk = data['road_info']['crosswalk']['polygon']
+        for c in crosswalk:
+            c = np.concatenate((c,c[0:1]),0)
+            plt.plot(c.T[0],c.T[1],color = 'green', linewidth = 0.5)
+
+    if 'speedBump' in data['road_info'].keys():
+        speedBump = data['road_info']['speedBump']['polygon']
+        for s in speedBump:
+            s = np.concatenate((s,s[0:1]),0)
+            plt.plot(s.T[0],s.T[1],color = 'salmon', linewidth = 2)
+    
+    if 'driveway' in data['road_info'].keys():
+        driveway = data['road_info']['driveway']['polygon']
+        for d in driveway:
+            d = np.concatenate((d,d[0:1]),0)
+            plt.plot(d.T[0],d.T[1],color = 'brown', linewidth = 0.5)
+
+    if 'roadLine' in data['road_info'].keys():
+        road_line = data['road_info']['roadLine']['polyline']
+        road_type = data['road_info']['roadLine']['type']
+
+        for i in range(len(road_line)):
+            l = road_line[i]
+            if 'WHITE' in road_type[i]:
+                c = 'skyblue'
+            elif 'YELLOW' in road_type[i]:
+                c = 'orange'
+            else:
+                c = 'black'
+            
+            if 'SOLID' in road_type[i]:
+                s = '-'
+            elif 'BROKEN' in road_type[i]:
+                s = '--'
+            else:
+                s = '-.'
+            
+            plt.plot(l.T[0],l.T[1],color = c, linestyle = s, linewidth = 1)
+    
+
+    if 'roadEdge' in data['road_info'].keys():
+        edge_line = data['road_info']['roadEdge']['polyline']
+        edge_type = data['road_info']['roadEdge']['type']
+
+        for i in range(len(edge_line)):
+            e = edge_line[i]
+            if 'MEDIAN' in edge_type[i]:
+                c = 'black'
+            elif 'BOUNDARY' in edge_type[i]:
+                c = 'black'
+            else:
+                c = 'black'
+            plt.plot(e.T[0],e.T[1],color = c, linestyle = '--', linewidth = 0.5)
+
+  
+    plt.gca().set_aspect('equal')
+    plt.xlabel('x(m)')
+    plt.ylabel('y(m)')
+    plt.savefig(path, dpi=2000)
