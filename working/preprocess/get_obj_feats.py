@@ -118,7 +118,9 @@ def get_obj_feats(data: dict, type_feats = 'xyvp', aug = False) -> dict:
         
         gt_pred = data['trajs_xyz'][i][mask_gt][:, :2]
         has_pred = data['valid_masks'][i][mask_gt]
-        ctrs.append(feat[-1, :2].copy())
+        ctr = np.zeros(2, np.float32)
+        ctr[:] = to_local(traj_xyz, orig, theta)[-1,:2].copy()
+        ctrs.append(ctr)
 
         if type_feats[0] == 'x':
             feat[1:, :2] -= feat[:-1, :2]

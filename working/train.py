@@ -8,7 +8,7 @@ import torch
 from torch import nn, Tensor
 from torch.utils.data import DataLoader, Dataset
 from torch.nn import functional as F
-from model.laneGCN import GreatNet # GANet, laneGCN
+from model.laneGCN_1 import GreatNet # GANet, laneGCN
 from losses.loss import Loss, Loss2, Loss3
 import torch.optim as optim
 import random
@@ -159,6 +159,7 @@ def main():
     config["num_scales"] = 6
     config["n_map"] = 128
     config["n_actor"] = 128
+    config['n_mark'] = 128
     config["actor2map_dist"] = 7.0 # 7.0
     config["map2actor_dist"] = 6.0 # 6.0
     config["actor2actor_dist"] = 50.0
@@ -173,10 +174,10 @@ def main():
     config["reg_coef"] = 1.0
     config['mid_num'] = 40
     config["metrics_preds"] = [30,50,80]
-    config["dim_feats"] = {'xyvp':[6,2], 'xyz':[4,3], 'xy':[3,2], 'xyp':[4,2], 'vp':[4,2]}
-    config['type_feats'] = 'xy'
-    config['f'] = '10f'
-    config['name'] = 'laneGCN'
+    config["dim_feats"] = {'xyvp':[6,2], 'xyz':[4,3], 'xy':[3,2], 'xyp':[4,2], 'vp':[4,2], 'vpt':[5,2]}
+    config['type_feats'] = 'vpt'
+    config['f'] = '1f'
+    config['name'] = 'laneGCN_1'
     config['train_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/train_' + config['f'] 
     config['val_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/val_' + config['f']
     config['dd'] = date.today().strftime('%m%d')
@@ -184,7 +185,7 @@ def main():
     net = GreatNet(config)
     net.cuda()
 
-    loss_f = Loss3(config)
+    loss_f = Loss(config)
     loss_f.cuda()
 
     post = Postprocess(config)

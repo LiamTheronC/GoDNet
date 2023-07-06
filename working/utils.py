@@ -153,7 +153,12 @@ def pre_gather(gts) -> Tensor:
 
 def dsmp(ctrln, df):
 
-    if len(ctrln) <= df:
+    if len(ctrln) <= 1:
+
+        return ctrln
+
+    elif len(ctrln) <= df:
+        
         df = len(ctrln) - 1
 
     return ctrln[::df]

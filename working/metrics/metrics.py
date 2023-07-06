@@ -312,9 +312,13 @@ class Postprocess():
         # graph
         rot = data['rot'][0]
         orig = data['orig'][0]
+
         ctrs = data['graph'][0]['ctrs'][:, :2]
+        marks = data['marks'][0][:, :2].to(torch.float32)
         ctrs = torch.matmul(ctrs, rot) + orig[:2]
-        plt.scatter(ctrs.T[0] ,ctrs.T[1], c = 'black',s = 0.05)
+        marks = torch.matmul(marks, rot) + orig[:2]
+        plt.scatter(ctrs.T[0], ctrs.T[1], c = 'black',s = 0.05)
+        plt.scatter(marks.T[0], marks.T[1], c = 'brown',s = 0.5)
 
 
         # trajectory history 
@@ -344,7 +348,8 @@ def get_target(reg, gt_preds, has_preds, indx,target):
         r,g,h=[],[],[]
     
         for i in range(len(indx)):
-            mask = torch.tensor(indx[i])
+            # mask = torch.tensor(indx[i])
+            mask = indx[i].clone().detach()
             r.append(reg[i][mask])
             g.append(gt_preds[i][mask])
             h.append(has_preds[i][mask])
