@@ -393,6 +393,7 @@ class MapNet(nn.Module):
         return feat, graph["idcs"], graph["ctrs"]
 
 
+
 class Att(nn.Module):
     def __init__(self, n_agt: int, n_ctx: int, config) -> None:
         super(Att, self).__init__()
@@ -555,6 +556,7 @@ class StaAtt(nn.Module):
         att_out = self.relu(att_out)
 
         return att_out
+
 
 
 class A2M(nn.Module):
@@ -732,9 +734,11 @@ class A2A(nn.Module):
         return actors
 
 
-class Mid(nn.Module):
+
+class Anchor(nn.Module):
+
     def __init__(self, config) -> None:
-        super(Mid,self).__init__()
+        super(Anchor,self).__init__()
         self.config = config
         norm = "GN"
         ng = 1
@@ -766,70 +770,35 @@ class Mid(nn.Module):
             for i in range(len(self.pred)):
                 preds.append(self.pred[i](actors))
             
-            mid = torch.cat([x.unsqueeze(1) for x in preds], 1)
+            acr = torch.cat([x.unsqueeze(1) for x in preds], 1)
 
             
             for i in range(len(actor_idcs)):
                  idcs = actor_idcs[i]
-                 mid[idcs] += actor_ctrs[i].unsqueeze(1)
+                 acr[idcs] += actor_ctrs[i].unsqueeze(1)
             
-            feats = self.att_dest(actors, torch.cat(actor_ctrs, 0), mid)
+            feats = self.att_dest(actors, torch.cat(actor_ctrs, 0), acr)
             cls = self.cls(feats).view(-1, self.config["num_mods"])
 
 
-            mid_out = dict()
-            mid_out['cls'],mid_out['mid'] = [], []
+            acr_out = dict()
+            acr_out['cls'], acr_out['reg'] = [], []
             for i in range(len(actor_idcs)):
                 idcs = actor_idcs[i]
-                mid_out["cls"].append(cls[idcs])
-                mid_out["mid"].append(mid[idcs])
-
-
-            return mid_out
-
-
-
-class Mid2A(nn.Module):
-    def __init__(self, config) -> None:
-        super(Mid2A,self).__init__()
-        self.config = config
-        norm = "GN"
-        ng = 1
-
-        n_actor = config["n_actor"]
-        n_map = config["n_map"]
-
-        att = []
-        for i in range(2):
-            att.append(Att(n_actor, n_map, config))
-        self.att = nn.ModuleList(att)
-
-
-    def forward(self, actors: Tensor, actor_idcs: List[Tensor], mid_out: List[Tensor], nodes: Tensor, node_idcs: List[Tensor], node_ctrs: List[Tensor]) -> Tensor:      
-        #m2a with mid goals of highest cls scores    
-            cls = torch.cat(mid_out['cls'],0)
-            mid = torch.cat(mid_out['mid'],0)
+                acr_out['cls'].append(cls[idcs])
+                acr_out['reg'].append(acr[idcs])
+            
+            
             values, min_idcs = cls.max(1)
             row_idcs = torch.arange(len(min_idcs)).long().to(min_idcs.device)
-            mid = mid[row_idcs,min_idcs]
+            acr_ = acr[row_idcs,min_idcs]
 
-            mid_list = []
+            new_ctrs = []
             for i in range(len(actor_idcs)):
-                mid_list.append(mid[actor_idcs[i]])
+                new_ctrs.append(acr_[actor_idcs[i]])
 
-            
-            for i in range(len(self.att)):
-                actors = self.att[i](
-                    actors,
-                    actor_idcs,
-                    mid_list,
-                    nodes,
-                    node_idcs,
-                    node_ctrs,
-                    self.config["map2actor_dist"],
-                )
 
-            return actors, mid_list
+            return acr_out, new_ctrs
 
 
 
@@ -889,6 +858,7 @@ class PredNet(nn.Module):
         return out
 
 
+
 class AttDest(nn.Module):
     def __init__(self, n_agt: int):
         super(AttDest, self).__init__()
@@ -926,13 +896,24 @@ class GreatNet(nn.Module):
         self.actor_net = ActorNet(config)
         self.map_net = MapNet(config)
 
-        self.a2m = A2M(config)
-        self.m2m = M2M(config)
-        self.m2a = M2A(config)
-        self.a2a = A2A(config)
+        a2m,m2m,m2a,a2a = [],[],[],[]
+        for i in range(3):
+            a2m.append(A2M(config))
+            m2m.append(M2M(config))
+            m2a.append(M2A(config))
+            a2a.append(A2M(config))
 
-        self.mid = Mid(config)
-        self.mid2a = Mid2A(config)
+        self.a2m = nn.ModuleList(a2m)
+        self.m2m = nn.ModuleList(m2m)
+        self.m2a = nn.ModuleList(m2a)
+        self.a2a = nn.ModuleList(a2a)
+
+        anchor_net, ac2a = [], []
+        for i in range(2):
+            anchor_net.append(Anchor(config))
+        
+        self.anchor_net = nn.ModuleList(anchor_net)
+        self.ac2a = nn.ModuleList(ac2a)
         
         self.pred_net = PredNet(config)
     
@@ -955,140 +936,34 @@ class GreatNet(nn.Module):
         nodes, node_idcs, node_ctrs = self.map_net(graph) # (B, 128)
 
         #------------------------------------------------------------#
-        
-        nodes = self.a2m(nodes, graph, actors, actor_idcs, actor_ctrs)
-        nodes = self.m2m(nodes, graph)
-        actors = self.m2a(actors, actor_idcs, actor_ctrs, nodes, node_idcs, node_ctrs)
-        actors = self.a2a(actors, actor_idcs, actor_ctrs) #(A,128)
 
-        mid_out = self.mid(actors,actor_idcs,actor_ctrs)
-        actors, mid_list = self.mid2a(actors, actor_idcs, mid_out, nodes, node_idcs, node_ctrs) # mid (A,2)
-        actors = self.a2a(actors, actor_idcs, mid_list) #(A,128)
+        ctrs_ =  actor_ctrs
+        acrs_ = []
+        for i in range(3):
+            nodes = self.a2m[i](nodes, graph, actors, actor_idcs, ctrs_)
+            nodes = self.m2m[i](nodes, graph)
+            actors = self.m2a[i](actors, ctrs_, actor_ctrs, nodes, node_idcs, node_ctrs)
+            actors = self.a2a[i](actors, ctrs_, actor_ctrs) #(A,128)
 
-        
+            if i < 2:
+                acr_out, new_ctrs = self.anchor_net[i](actors, actor_idcs, ctrs_)
+                ctrs_ = new_ctrs
+                acrs_.append(acr_out)
+
         out = self.pred_net(actors, actor_idcs, actor_ctrs)
-        out['mid'] = mid_out['mid']
-        out['m_cls'] = mid_out['cls']
+
         rot, orig = gpu(data['rot']), gpu(data['orig'])
 
+        for i in len(acrs_):
+            out['a_reg' + str(i)] = acr_out[i]['reg']
+            out['a_clc' + str(i)] = acr_out[i]['clc']
+
+        keys = [key for key in out.keys() if 'a_reg' in key]
         # to_global
         for i in range(len(out['reg'])):
             out['reg'][i] = torch.matmul(out['reg'][i], rot[i]) + orig[i][:2].view(1, 1, 1, -1)
-            out['mid'][i] = torch.matmul(out['mid'][i], rot[i]) + orig[i][:2].view(1, 1, -1)
+            
+            for key in keys:
+                out[key][i] = torch.matmul(out[key][i], rot[i]) + orig[i][:2].view(1, 1, -1)
 
         return out
-
-
-
-# class SpAtt(nn.Module):
-#     def __init__(self, n_agt: int, n_ctx: int, config) -> None:
-#         super(SpAtt, self).__init__()
-#         self.config = config
-#         norm = "GN"
-#         ng = 1
-#         n_in = config['dim_feats'][config['type_feats']][1]
-
-#         self.dist = nn.Sequential(
-#             nn.Linear(n_in, n_ctx),
-#             nn.ReLU(inplace=True),
-#             Linear(n_ctx, n_ctx, norm=norm, ng=ng),
-#         )
-
-#         self.query = Linear(n_agt, n_ctx, norm=norm, ng=ng)
-
-#         self.ctx = nn.Sequential(
-#             Linear(3 * n_ctx, n_agt, norm=norm, ng=ng),
-#             nn.Linear(n_agt, n_agt, bias=False),
-#         )
-
-#         self.agt = nn.Linear(n_agt, n_agt, bias=False)
-#         self.norm = nn.GroupNorm(gcd(ng, n_agt), n_agt)
-#         self.linear = Linear(n_agt, n_agt, norm=norm, ng=ng, act=False)
-#         self.relu = nn.ReLU(inplace=True)
-
-#     def forward(self, agts: Tensor, agt_idcs: List[Tensor], agt_ctrs: List[Tensor], ctx: Tensor, ctx_idcs: List[Tensor], ctx_ctrs: List[Tensor], dist_th: float, graph: Dict) -> Tensor:
-#         # ctx = nodes, agts = objects
-#         # get the features of nodes(current, 6 sucs) into  objects
-#         res = agts
-#         if len(ctx) == 0:
-#             agts = self.agt(agts)
-#             agts = self.relu(agts)
-#             agts = self.linear(agts)
-#             agts += res
-#             agts = self.relu(agts)
-#             return agts
-
-#         batch_size = len(agt_idcs)
-#         hi, wi = [], []
-#         hi_count, wi_count = 0, 0
-#         n_c = self.config['dim_feats'][self.config['type_feats']][1]
-
-        
-#         for i in range(batch_size):
-
-#             dist = agt_ctrs[i].view(-1, 1, n_c) - ctx_ctrs[i].view(1, -1, n_c)
-#             dist = torch.sqrt((dist ** 2).sum(2))
-#             mask = dist <= dist_th
-
-#             idcs = torch.nonzero(mask, as_tuple=False)
-
-#             if len(idcs) == 0:
-#                 continue
-
-#             hi.append(idcs[:, 0] + hi_count)
-#             wi.append(idcs[:, 1] + wi_count)
-#             hi_count += len(agt_idcs[i])
-#             wi_count += len(ctx_idcs[i])
-
-
-#         hi = torch.cat(hi, 0)
-#         wi = torch.cat(wi, 0)
-#         agt_ctrs = torch.cat(agt_ctrs, 0)
-#         ctx_ctrs = torch.cat(ctx_ctrs, 0)
-
-#         # get the indx of all the sucs given wi
-#         #(1) get the sparse matrix of (hi, wi)
-#         #(2) have the sparse matrix of (wi, suc_i) in graph['suc']
-#         #(3) get the sparse matrix of (hi, suc_i)
-
-#         num_agts = len(agt_ctrs)
-#         num_nodes = len(ctx_ctrs)
-
-#         indcs = torch.stack((hi,wi))
-#         value = torch.ones(len(hi)).cuda()
-#         size = torch.Size([num_agts, num_nodes])
-#         sp_hw = torch.sparse_coo_tensor(indcs, value, size)
-#         sp_final = sp_hw.clone()
-
-#         for i in range(len(graph['suc'])):
-#             u = graph['suc'][i]['u']
-#             v = graph['suc'][i]['v']
-#             indcs = torch.stack((u,v))
-#             value = torch.ones(len(u)).cuda()
-#             size = torch.Size([num_nodes, num_nodes])
-#             sp_uv = torch.sparse_coo_tensor(indcs, value, size)
-#             sp_final += torch.matmul(sp_hw,sp_uv)
-
-#         hi = sp_final.coalesce().indices()[0]
-#         wi = sp_final.coalesce().indices()[1]
-
-#         # conduct sparse spatial attention given (hi, suc_i)
-#         dist = agt_ctrs[hi] - ctx_ctrs[wi]
-#         dist = self.dist(dist)
-
-#         query = self.query(agts[hi])
-
-#         ctx = ctx[wi]
-#         ctx = torch.cat((dist, query, ctx), 1)
-#         ctx = self.ctx(ctx)
-
-#         agts = self.agt(agts)
-#         agts.index_add_(0, hi, ctx)
-#         agts = self.norm(agts)
-#         agts = self.relu(agts)
-
-#         agts = self.linear(agts)
-#         agts += res
-#         agts = self.relu(agts)
-
-#         return agts

@@ -314,11 +314,9 @@ class Postprocess():
         orig = data['orig'][0]
 
         ctrs = data['graph'][0]['ctrs'][:, :2]
-        marks = data['marks'][0][:, :2].to(torch.float32)
         ctrs = torch.matmul(ctrs, rot) + orig[:2]
-        marks = torch.matmul(marks, rot) + orig[:2]
         plt.scatter(ctrs.T[0], ctrs.T[1], c = 'black',s = 0.05)
-        plt.scatter(marks.T[0], marks.T[1], c = 'brown',s = 0.5)
+       
 
 
         # trajectory history 

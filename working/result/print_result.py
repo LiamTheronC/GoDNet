@@ -17,6 +17,7 @@ result['xy_10f_lanGCN'] = 'loss:0.97 -- fde:1.51 -- ade:0.65 -- Tfde:5.71 -- Tad
 result['xy_10f_laneGCN_focal'] = 'loss:3.24 -- fde:2.14 -- ade:0.92 -- Tfde:6.74 -- Tade:2.73'
 result['xy_10f_GANet'] = 'loss:2.43 -- fde:1.53 -- ade:0.68 -- Tfde:5.73 -- Tade:2.44'
 result['xy_10f_GANet_midgoal'] = 'loss:1.66 -- fde:1.45 -- ade:0.63 -- Tfde:5.51 -- Tade:2.28'
+result['vpt_10f_laneGCN1'] = 'loss:1.02 -- fde:1.62 -- ade:0.68 -- Tfde:6.27 -- Tade:2.54'
 
 
 
