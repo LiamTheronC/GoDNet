@@ -153,7 +153,7 @@ class Postprocess():
         return metrics
 
 
-    def display(self, data, metrics, dt, epoch, num_epochs, mode = "Train"):
+    def display(self, metrics, dt, epoch, num_epochs, mode = "Train"):
 
         out= []
         for key in metrics.keys():
@@ -163,7 +163,6 @@ class Postprocess():
         if mode == 'Train':
             msg1 = ' --- (' + mode + '), Epoch [{}/{}], Time:{:.1f} ---'.format(epoch+1, num_epochs, dt)
         elif mode == 'Validation':
-            print(data['target_type'][0])
             msg1 = ' ***(' + mode + '), Epoch [{}/{}], Time:{:.1f} ***'.format(epoch+1, num_epochs, dt)
         
         msg2 = 'loss:{:.2f} -- fde:{:.2f} -- ade:{:.2f} -- Tfde:{:.2f} -- Tade:{:.2f}'.format(out[0],out[1],out[2],out[3],out[4])
@@ -173,7 +172,7 @@ class Postprocess():
         logging.info(msg1)
         logging.info(msg2)
 
-        return msg2
+        return msg2,out[3]
     
 
     def plot(self, metrics, data, outputs, msg, key = 1, all = True):
@@ -181,7 +180,6 @@ class Postprocess():
         f_idcs = metrics['f_idcs'][0]
         
         row_idcs = torch.tensor(range(len(f_idcs)))
-
         reg = outputs['reg']
         gt_preds = gather(data['gt_preds'])
         has_preds = gather(data['has_preds'])

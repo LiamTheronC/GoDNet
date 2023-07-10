@@ -140,7 +140,7 @@ class AcrLoss(nn.Module):
             acr_out['num_reg' + str(i)] = has_acr.sum().item()
 
             mgn = cls[row_idcs, min_idcs].unsqueeze(1) - cls
-            mask0 = (min_dist < self.config["cls_th"]).view(-1, 1)
+            mask0 = (min_dist < self.config["cls_th"] * acrs[i] / self.config['num_preds']).view(-1, 1)
             mask1 = dist - min_dist.view(-1, 1) > self.config["cls_ignore"]
             mgn = mgn[mask0 * mask1]
             mask = mgn < self.config["mgn"]

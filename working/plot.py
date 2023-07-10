@@ -39,12 +39,12 @@ class W_Dataset(Dataset):
 
 def main():
 
-    # seed = 33
+    seed = 33
 
-    # torch.manual_seed(seed)
-    # torch.cuda.manual_seed(seed)
-    # np.random.seed(seed)
-    # random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    np.random.seed(seed)
+    random.seed(seed)
 
     config = dict()
     config['n_actornet'] = 128
@@ -56,7 +56,7 @@ def main():
     config['n_mark'] = 128
     config["actor2map_dist"] = 7.0
     config["map2actor_dist"] = 6.0
-    config["actor2actor_dist"] = 100.0
+    config["actor2actor_dist"] = 50.0
     config["num_mods"] = 6
     config["pred_size"] = 80
     config["pred_step"] = 1
@@ -108,7 +108,7 @@ def main():
                 outputs = net(data)
                 loss_out = loss_f(outputs,data)
                 post.append(metrics,loss_out.item(),outputs,data)
-                msg = post.display(data, metrics, 0, epoch, num_epochs, "Validation")
+                msg = post.display(metrics, 0, epoch, num_epochs, "Validation")
                 post.plot(metrics, data, outputs, msg, 1, True)
                 post.plot(metrics, data, outputs, msg, 1, False)
                 break

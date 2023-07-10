@@ -58,7 +58,7 @@ def train1(net,train_loader,loss_f,optimizer,epoch,num_epochs, post):
     post.display(metrics, dt, epoch, num_epochs, "Train")
 
 
-def val1(net,val_loader,loss_f,epoch,num_epochs,post,loss_a, config):
+def val1(net, val_loader, loss_f, epoch, num_epochs, post, Tfde_a, config):
     net.eval()
     metrics = dict()
     start_time = time.time()
@@ -70,14 +70,14 @@ def val1(net,val_loader,loss_f,epoch,num_epochs,post,loss_a, config):
             post.append(metrics,loss_out.item(),outputs,data)
     
     dt = time.time() - start_time
-    _, loss = post.display(metrics, dt, epoch, num_epochs, "Validation")
+    _, Tfde = post.display(metrics, dt, epoch, num_epochs, "Validation")
 
-    if loss < loss_a:
+    if Tfde < Tfde_a:
         print('update weights')
         torch.save(net.state_dict(), 'weights/'+ config['name'] +'_'+ config['type_feats'] + '_' + config['f'] + config['dd'] +'.pth')
-        loss_a = loss
+        Tfde_a = Tfde
 
-    return loss_a
+    return Tfde_a
 
 
 @profile
@@ -104,16 +104,16 @@ def main():
     config["pred_size"] = 80
     config["pred_step"] = 1
     config["num_preds"] = config["pred_size"] // config["pred_step"]
-    config["cls_th"] = 2.0 #5.0
+    config["cls_th"] = 5.0 #5.0, 2.0
     config["cls_ignore"] = 0.2
     config["mgn"] = 0.2
     config["cls_coef"] = 1.0
     config["reg_coef"] = 1.0
     config['mid_num'] = 40
     config["metrics_preds"] = 80
-    config['acrs'] = [40,80]
+    config['acrs'] = [40,80] # [40,80]
     config["dim_feats"] = {'xyvp':[6,2], 'xyz':[4,3], 'xy':[3,2], 'xyp':[4,2], 'vp':[4,2], 'vpt':[5,2]}
-    config['type_feats'] = 'xy'
+    config['type_feats'] = 'vp'
     config['f'] = '5f'
     config['name'] = 'GANet'
     config['train_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/train_' + config['f'] 
@@ -156,11 +156,11 @@ def main():
     print(msg)
     logging.info(msg)
 
-    loss_a = 100
+    Tfde_a = 100
     for epoch in range(num_epochs):
         train1(net,train_loader,loss_f,optimizer,epoch,num_epochs,post)
         if (epoch + 1) % 10 == 0 or epoch == 0:
-            loss_a = val1(net,val_loader,loss_f,epoch,num_epochs, post, loss_a, config)
+            Tfde_a = val1(net,val_loader,loss_f,epoch,num_epochs, post, Tfde_a, config)
 
 
 if __name__ == "__main__":
