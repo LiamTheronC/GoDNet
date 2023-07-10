@@ -27,6 +27,7 @@ class W_Dataset(Dataset):
 
         data_path = os.path.join(self.path,self.files[index])
         data = torch.load(data_path)
+        print(data_path)
 
         return data
     
@@ -65,7 +66,7 @@ def main():
     config["mgn"] = 0.2
     config["cls_coef"] = 1.0
     config["reg_coef"] = 1.0
-    config["metrics_preds"] = [30,50,80]
+    config["metrics_preds"] = 80
     config['acrs'] = [40,80]
     config['mid_num'] = 40
     config["dim_feats"] = {'xyvp':[6,2], 'xyz':[4,3], 'xy':[3,2], 'xyp':[4,2], 'vp':[4,2], 'vpt':[5,2]}
@@ -104,12 +105,12 @@ def main():
         for epoch in range(num_epochs):
             for batch_idx, data in enumerate(val_loader):
                 #print(feat.shape,gt_pred.shape,has_pred.shape,ctrs.shape)
-
                 outputs = net(data)
                 loss_out = loss_f(outputs,data)
                 post.append(metrics,loss_out.item(),outputs,data)
-                msg,_ = post.display(metrics, 0, epoch, num_epochs, "Validation")
-                post.plot(metrics, data, outputs, msg, 6)
+                msg = post.display(data, metrics, 0, epoch, num_epochs, "Validation")
+                post.plot(metrics, data, outputs, msg, 1, True)
+                post.plot(metrics, data, outputs, msg, 1, False)
                 break
             break
 

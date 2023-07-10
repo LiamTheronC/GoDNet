@@ -26,7 +26,6 @@ result['xy_10f_GANet_midgoal'] = 'loss:1.66 -- fde:1.45 -- ade:0.63 -- Tfde:5.51
 
 
 
-
 def main():
 
     for key in result.keys():

@@ -110,7 +110,7 @@ def main():
     config["cls_coef"] = 1.0
     config["reg_coef"] = 1.0
     config['mid_num'] = 40
-    config["metrics_preds"] = [30,50,80]
+    config["metrics_preds"] = 80
     config['acrs'] = [40,80]
     config["dim_feats"] = {'xyvp':[6,2], 'xyz':[4,3], 'xy':[3,2], 'xyp':[4,2], 'vp':[4,2], 'vpt':[5,2]}
     config['type_feats'] = 'xy'
