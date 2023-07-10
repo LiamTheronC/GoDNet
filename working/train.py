@@ -2,24 +2,20 @@
 
 import os
 import numpy as np
-from fractions import gcd
-from numbers import Number
 import torch
-from torch import nn, Tensor
 from torch.utils.data import DataLoader, Dataset
 from torch.nn import functional as F
-from model.laneGCN import GreatNet # GANet, laneGCN
-from losses.loss import Loss, Loss2, Loss3
 import torch.optim as optim
 import random
-from utils import collate_fn, pre_gather
+from utils import collate_fn
 import logging
 from memory_profiler import profile
 from metrics.metrics import Postprocess
-import gc
 import time
 from datetime import date
 
+from model.GANet import GreatNet # GANet, laneGCN
+from losses.ganet import Loss
 
 
 class W_Dataset(Dataset):
@@ -38,65 +34,6 @@ class W_Dataset(Dataset):
     def __len__(self) -> int:
 
         return len(self.files)
-
-
-
-# def train(net,train_loader,loss_f,optimizer,epoch,num_epochs):
-#     net.train()
-#     loss_t = []
-#     for batch_idx, data in enumerate(train_loader):
-        
-
-#         outputs = net(data)
-#         outputs = outputs.view(outputs.size(0),-1,2)
-
-#         ctrs = pre_gather(data['ctrs'])
-#         ctrs = ctrs[:,:2].unsqueeze(1).cuda()
-
-#         outputs = outputs.cumsum(dim=1) + ctrs
-
-#         has_pred = pre_gather(data['has_preds']).cuda()
-#         gt_pred = pre_gather(data['gt_preds']).float().cuda()
-
-#         loss = loss_f(outputs, gt_pred, has_pred)
-
-#         # Backward and optimize
-#         optimizer.zero_grad()
-#         loss.backward()
-#         optimizer.step()
-
-#         loss_t.append(loss)
-
-#     mean_loss = sum(loss_t)/len(loss_t)
-#     msg = 'Epoch [{}/{}], Train_Loss: {:.4f}'.format(epoch+1, num_epochs, mean_loss)
-#     print(msg)
-#     logging.info(msg)
-
-
-# def val(net,val_loader,loss_f,epoch,num_epochs):
-#     net.eval()
-#     loss_v = []
-#     with torch.no_grad():
-#         for batch_idx, data in enumerate(val_loader):
-#             outputs = net(data)
-#             outputs = outputs.view(outputs.size(0),-1,2)
-
-#             ctrs = pre_gather(data['ctrs'])
-#             ctrs = ctrs[:,:2].unsqueeze(1).cuda()
-
-#             outputs = outputs.cumsum(dim=1) + ctrs
-
-#             has_pred = pre_gather(data['has_preds']).cuda()
-#             gt_pred = pre_gather(data['gt_preds']).float().cuda()
-
-#             loss = loss_f(outputs, gt_pred, has_pred)
-#             loss_v.append(loss)
-    
-#     mean_loss = sum(loss_v)/len(loss_v)
-#     msg = 'Epoch [{}/{}], Val_Loss: {:.4f}'.format(epoch+1, num_epochs, mean_loss)
-#     print(msg)
-#     logging.info(msg)
-
 
 
 def train1(net,train_loader,loss_f,optimizer,epoch,num_epochs, post):
@@ -176,9 +113,9 @@ def main():
     config["metrics_preds"] = [30,50,80]
     config['acrs'] = [40,80]
     config["dim_feats"] = {'xyvp':[6,2], 'xyz':[4,3], 'xy':[3,2], 'xyp':[4,2], 'vp':[4,2], 'vpt':[5,2]}
-    config['type_feats'] = 'vp'
+    config['type_feats'] = 'xy'
     config['f'] = '5f'
-    config['name'] = 'laneGCN'
+    config['name'] = 'GANet'
     config['train_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/train_' + config['f'] 
     config['val_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/val_' + config['f']
     config['dd'] = date.today().strftime('%m%d')

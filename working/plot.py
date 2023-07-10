@@ -6,8 +6,8 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader, Dataset
 from torch.nn import functional as F
-from model.laneGCN_1 import GreatNet
-from losses.loss import Loss,Loss3
+from model.GANet import GreatNet
+from losses.ganet import Loss
 import torch.optim as optim
 import random
 from memory_profiler import profile
@@ -66,20 +66,21 @@ def main():
     config["cls_coef"] = 1.0
     config["reg_coef"] = 1.0
     config["metrics_preds"] = [30,50,80]
+    config['acrs'] = [40,80]
     config['mid_num'] = 40
     config["dim_feats"] = {'xyvp':[6,2], 'xyz':[4,3], 'xy':[3,2], 'xyp':[4,2], 'vp':[4,2], 'vpt':[5,2]}
-    config['type_feats'] = 'vpt'
-    config['f'] = '10f'
-    config['name'] = 'laneGCN_1'
+    config['type_feats'] = 'vp'
+    config['f'] = '5f'
+    config['name'] = 'GANet'
     config['train_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/train_' + config['f'] 
     config['val_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/val_' + config['f']
-    config['model_weights'] = 'weights/'+ config['name'] + '_' + config['type_feats'] + '_' + config['f'] + '0706.pth'
+    config['model_weights'] = 'weights/'+ config['name'] + '_' + config['type_feats'] + '_' + config['f'] + '0707.pth'
 
     net = GreatNet(config)
     net.load_state_dict(torch.load(config['model_weights']))
     net.cuda()
 
-    loss_f = Loss3(config)
+    loss_f = Loss(config)
     loss_f.cuda()
 
     post = Postprocess(config)

@@ -1,5 +1,4 @@
-# original lanGCN replication
-# different input features
+# with anchors
 
 import sys
 sys.path.append('/home/avt/prediction/Waymo/working/')
@@ -892,16 +891,17 @@ class GreatNet(nn.Module):
         super().__init__()
 
         self.config = config
+        num_acrs = len(config['acrs'])
 
         self.actor_net = ActorNet(config)
         self.map_net = MapNet(config)
 
         a2m,m2m,m2a,a2a = [],[],[],[]
-        for i in range(3):
+        for i in range(num_acrs + 1):
             a2m.append(A2M(config))
             m2m.append(M2M(config))
             m2a.append(M2A(config))
-            a2a.append(A2M(config))
+            a2a.append(A2A(config))
 
         self.a2m = nn.ModuleList(a2m)
         self.m2m = nn.ModuleList(m2m)
@@ -909,7 +909,7 @@ class GreatNet(nn.Module):
         self.a2a = nn.ModuleList(a2a)
 
         anchor_net, ac2a = [], []
-        for i in range(2):
+        for i in range(num_acrs):
             anchor_net.append(Anchor(config))
         
         self.anchor_net = nn.ModuleList(anchor_net)
@@ -939,24 +939,24 @@ class GreatNet(nn.Module):
 
         ctrs_ =  actor_ctrs
         acrs_ = []
-        for i in range(3):
+        for i in range(len(self.a2m)):
             nodes = self.a2m[i](nodes, graph, actors, actor_idcs, ctrs_)
             nodes = self.m2m[i](nodes, graph)
-            actors = self.m2a[i](actors, ctrs_, actor_ctrs, nodes, node_idcs, node_ctrs)
-            actors = self.a2a[i](actors, ctrs_, actor_ctrs) #(A,128)
+            actors = self.m2a[i](actors, actor_idcs, ctrs_, nodes, node_idcs, node_ctrs)
+            actors = self.a2a[i](actors, actor_idcs, ctrs_) #(A,128)
 
-            if i < 2:
+            if i < len(self.anchor_net):
                 acr_out, new_ctrs = self.anchor_net[i](actors, actor_idcs, ctrs_)
                 ctrs_ = new_ctrs
                 acrs_.append(acr_out)
 
         out = self.pred_net(actors, actor_idcs, actor_ctrs)
 
-        rot, orig = gpu(data['rot']), gpu(data['orig'])
+        for i in range(len(acrs_)):
+            out['a_reg' + str(i)] = acrs_[i]['reg']
+            out['a_cls' + str(i)] = acrs_[i]['cls']
 
-        for i in len(acrs_):
-            out['a_reg' + str(i)] = acr_out[i]['reg']
-            out['a_clc' + str(i)] = acr_out[i]['clc']
+        rot, orig = gpu(data['rot']), gpu(data['orig'])
 
         keys = [key for key in out.keys() if 'a_reg' in key]
         # to_global
