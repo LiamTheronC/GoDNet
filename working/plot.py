@@ -1,6 +1,6 @@
 import os
 import numpy as np
-from fractions import gcd
+from math import gcd
 from numbers import Number
 import torch
 from torch import nn
@@ -39,12 +39,12 @@ class W_Dataset(Dataset):
 
 def main():
 
-    seed = 33
+    # seed = 33
 
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
-    np.random.seed(seed)
-    random.seed(seed)
+    # torch.manual_seed(seed)
+    # torch.cuda.manual_seed(seed)
+    # np.random.seed(seed)
+    # random.seed(seed)
 
     config = dict()
     config['n_actornet'] = 128
@@ -67,15 +67,15 @@ def main():
     config["cls_coef"] = 1.0
     config["reg_coef"] = 1.0
     config["metrics_preds"] = 80
-    config['acrs'] = [40,80]
+    config['acrs'] = [20,40,60]
     config['mid_num'] = 40
     config["dim_feats"] = {'xyvp':[6,2], 'xyz':[4,3], 'xy':[3,2], 'xyp':[4,2], 'vp':[4,2], 'vpt':[5,2]}
     config['type_feats'] = 'vp'
     config['f'] = '5f'
-    config['name'] = 'GANet'
+    config['name'] = 'GANet_246'
     config['train_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/train_' + config['f'] 
     config['val_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/val_' + config['f']
-    config['model_weights'] = 'weights/'+ config['name'] + '_' + config['type_feats'] + '_' + config['f'] + '0707.pth'
+    config['model_weights'] = 'weights/'+ config['name'] + '_' + config['type_feats'] + '_' + config['f'] + '0710.pth'
 
     net = GreatNet(config)
     net.load_state_dict(torch.load(config['model_weights']))
@@ -108,9 +108,9 @@ def main():
                 outputs = net(data)
                 loss_out = loss_f(outputs,data)
                 post.append(metrics,loss_out.item(),outputs,data)
-                msg = post.display(metrics, 0, epoch, num_epochs, "Validation")
+                msg,_ = post.display(metrics, 0, epoch, num_epochs, "Validation")
+                post.plot(metrics, data, outputs, msg, 6, True)
                 post.plot(metrics, data, outputs, msg, 1, True)
-                post.plot(metrics, data, outputs, msg, 1, False)
                 break
             break
 

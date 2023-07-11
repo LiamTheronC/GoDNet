@@ -15,6 +15,9 @@ result['xyvp_5f'] = 'loss:1.17 -- fde:1.91 -- ade:0.79 -- Tfde:7.23 -- Tade:2.89
 result['vp_5f_sparse'] = 'loss:1.10 -- fde:1.72 -- ade:0.73 -- Tfde:6.56 -- Tade:2.69' #100
 result['vp_5f_laneGCN'] = 'loss:1.16 -- fde:1.92 -- ade:0.79 -- Tfde:7.26 -- Tade:2.91' #60
 result['vp_5f_GANet'] = 'loss:4.30 -- fde:1.59 -- ade:0.70 -- Tfde:5.98 -- Tade:2.53' #130
+result['vp_5f_GANet'] = 'loss:4.30 -- fde:1.63 -- ade:0.71 -- Tfde:6.19 -- Tade:2.60' #110 cls=5
+result['vp_5f_GANet']'loss:3.73 -- fde:1.57 -- ade:0.69 -- Tfde:5.88 -- Tade:2.49' # 90, 246
+
 result['xy_5f_GANet'] = 'loss:4.34 -- fde:1.65 -- ade:0.72 -- Tfde:6.09 -- Tade:2.55' #120
 
 

@@ -226,7 +226,10 @@ class Postprocess():
             regs = regs[row_idcs,f_idcs].cpu().detach()
             for j in range(len(regs)):
                 line = regs[j][has_preds[j]]
-                plt.plot(line.T[0], line.T[1], color='green', linewidth=1.0)
+                if engage_ids[j] in target_ids:
+                    plt.plot(line.T[0],line.T[1],color='black',linewidth=0.8)
+                elif all:
+                    plt.plot(line.T[0],line.T[1],color='green',linewidth=0.8)
         
         # ground truth
         for j in range(len(gt_preds)):
