@@ -908,12 +908,11 @@ class GreatNet(nn.Module):
         self.m2a = nn.ModuleList(m2a)
         self.a2a = nn.ModuleList(a2a)
 
-        anchor_net, ac2a = [], []
+        anchor_net = []
         for i in range(num_acrs):
             anchor_net.append(Anchor(config))
         
         self.anchor_net = nn.ModuleList(anchor_net)
-        self.ac2a = nn.ModuleList(ac2a)
         
         self.pred_net = PredNet(config)
     

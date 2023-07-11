@@ -114,7 +114,7 @@ def main():
     config['acrs'] = [20,40,60] # [40,80]
     config["dim_feats"] = {'xyvp':[6,2], 'xyz':[4,3], 'xy':[3,2], 'xyp':[4,2], 'vp':[4,2], 'vpt':[5,2]}
     config['type_feats'] = 'vp'
-    config['f'] = '5f'
+    config['f'] = '25f'
     config['name'] = 'GANet_246'
     config['train_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/train_' + config['f'] 
     config['val_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/val_' + config['f']
@@ -130,7 +130,7 @@ def main():
 
     optimizer = optim.Adam(net.parameters(), lr = config['lr'])
 
-    batch_size = 4
+    batch_size = 2
     dataset_train = W_Dataset(config['train_split'])
     train_loader = DataLoader(dataset_train, 
                            batch_size = batch_size ,

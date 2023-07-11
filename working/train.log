@@ -10302,3 +10302,11 @@
 2023-07-11 07:51:47,940 - INFO - loss:1.84 -- fde:0.83 -- ade:0.38 -- Tfde:2.83 -- Tade:1.24
 2023-07-11 07:55:12,021 - INFO -  --- (Train), Epoch [146/150], Time:204.0 ---
 2023-07-11 07:55:12,021 - INFO - loss:1.80 -- fde:0.82 -- ade:0.37 -- Tfde:2.81 -- Tade:1.22
+2023-07-11 14:29:10,260 - INFO - Training info: GANet_246,vp,25f
+2023-07-11 14:32:05,867 - INFO - Training info: GANet_246,vp,25f
+2023-07-11 14:36:47,589 - INFO - Training info: GANet_246,vp,25f
+2023-07-11 15:01:23,306 - INFO -  --- (Train), Epoch [1/150], Time:1475.6 ---
+2023-07-11 15:01:23,317 - INFO - loss:9.15 -- fde:4.18 -- ade:1.93 -- Tfde:13.03 -- Tade:5.69
+2023-07-11 15:10:46,825 - INFO -  ***(Validation), Epoch [1/150], Time:563.5 ***
+2023-07-11 15:10:46,826 - INFO - loss:7.07 -- fde:3.62 -- ade:1.69 -- Tfde:11.19 -- Tade:4.93
+2023-07-11 15:20:36,043 - INFO - Training info: GANet_246,vp,25f

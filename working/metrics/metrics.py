@@ -62,6 +62,10 @@ def get_minFDE(reg, data, num_preds = 80, num_mods = 6, target = False):
 
     fde = min_dist.mean().item()
 
+    # if target:
+    #     print('reg', reg[row_idcs, min_idcs, last_idcs])
+    #     print(gt_preds[row_idcs, last_idcs])
+
     return fde, min_idcs
 
 
@@ -221,8 +225,11 @@ class Postprocess():
                 ri = regs[:,i].cpu().detach()
                 for j in range(len(ri)):
                     line = ri[j][has_preds[j]]
-                    plt.plot(line.T[0],line.T[1],color='green', linewidth=0.8, alpha = 0.2)
-            
+                    if engage_ids[j] in target_ids:
+                        plt.plot(line.T[0],line.T[1],color='green', linewidth=0.8, alpha = 0.2)
+                    elif all:
+                        plt.plot(line.T[0],line.T[1],color='green', linewidth=0.8, alpha = 0.2)
+
             regs = regs[row_idcs,f_idcs].cpu().detach()
             for j in range(len(regs)):
                 line = regs[j][has_preds[j]]
@@ -250,8 +257,6 @@ class Postprocess():
         ctrs = torch.matmul(ctrs, rot) + orig[:2]
         plt.scatter(ctrs.T[0], ctrs.T[1], c = 'black',s = 0.05)
        
-
-
         # trajectory history 
         indx = data['engage_indx'][0]
         target_indx = data['target_indx_e'][0]
@@ -270,7 +275,6 @@ class Postprocess():
             traj = traj[:12][masks[i][:12]] 
             plt.plot(traj.T[0],traj.T[1],color='blue',linewidth=1.0, linestyle='--')
             
-
         
         plt.gca().set_aspect('equal')
         plt.title(msg)
@@ -377,3 +381,22 @@ def panorama(data, path = False):
         plt.savefig(path, dpi=2000)
     else:
         plt.show()
+
+def plot_trajs(data):
+    trajs = data['trajs_xyz']
+    masks = data['valid_masks']
+    for i in range(len(trajs)):
+        line = trajs[i][masks[i]]
+        plt.plot(line.T[0],line.T[1],color='blue',linewidth=1.0, linestyle='--')
+
+    rot = data['rot']
+    orig = data['orig']
+
+    ctrs = data['graph']['ctrs'][:, :2]
+    ctrs = np.matmul(ctrs, rot) + orig[:2]
+    plt.scatter(ctrs.T[0], ctrs.T[1], c = 'black',s = 0.05)
+    
+    plt.gca().set_aspect('equal')
+    plt.xlabel('x(m)')
+    plt.ylabel('y(m)')
+    plt.show()
