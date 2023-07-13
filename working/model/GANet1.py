@@ -927,9 +927,7 @@ class GreatNet(nn.Module):
 
         ctrs_ =  actor_ctrs
         acrs_ = []
-        for i in range(num_acrs + 1):
-            nodes = self.a2m(nodes, graph, actors, actor_idcs, ctrs_)
-            nodes = self.m2m(nodes, graph)
+        for i in range(num_acrs + 1):          
             actors = self.m2a(actors, actor_idcs, ctrs_, nodes, node_idcs, node_ctrs)
             actors = self.a2a(actors, actor_idcs, ctrs_) #(A,128)
 

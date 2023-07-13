@@ -6,8 +6,6 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader, Dataset
 from torch.nn import functional as F
-from model.GANet import GreatNet
-from losses.ganet import Loss
 import torch.optim as optim
 import random
 from memory_profiler import profile
@@ -15,6 +13,9 @@ from metrics.metrics import Postprocess
 from utils import collate_fn, pre_gather
 import matplotlib.pyplot as plt
 import time
+
+from model.GANet1 import GreatNet
+from losses.ganet import Loss
 
 
 class W_Dataset(Dataset):
@@ -35,6 +36,20 @@ class W_Dataset(Dataset):
 
         return len(self.files)
 
+
+def val1(net, val_loader, loss_f, epoch, num_epochs, post):
+    net.eval()
+    metrics = dict()
+    start_time = time.time()
+    with torch.no_grad():
+        for batch_idx, data in enumerate(val_loader):
+
+            outputs = net(data)
+            loss_out = loss_f(outputs,data)
+            post.append(metrics,loss_out.item(),outputs,data)
+    
+    dt = time.time() - start_time
+    _, Tfde = post.display(metrics, dt, epoch, num_epochs, "Validation")
 
 
 def main():
@@ -71,11 +86,11 @@ def main():
     config['mid_num'] = 40
     config["dim_feats"] = {'xyvp':[6,2], 'xyz':[4,3], 'xy':[3,2], 'xyp':[4,2], 'vp':[4,2], 'vpt':[5,2]}
     config['type_feats'] = 'vp'
-    config['f'] = '5f'
-    config['name'] = 'GANet_246'
+    config['f'] = '25f'
+    config['name'] = 'GANet1_246'
     config['train_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/train_' + config['f'] 
-    config['val_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/val_' + config['f']
-    config['model_weights'] = 'weights/'+ config['name'] + '_' + config['type_feats'] + '_' + config['f'] + '0710.pth'
+    config['val_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/val_' + '5f'
+    config['model_weights'] = 'weights/'+ config['name'] + '_' + config['type_feats'] + '_' + config['f'] + '0712.pth'
 
     net = GreatNet(config)
     net.load_state_dict(torch.load(config['model_weights']))
@@ -104,14 +119,13 @@ def main():
     with torch.no_grad():
         for epoch in range(num_epochs):
             for batch_idx, data in enumerate(val_loader):
-                #print(feat.shape,gt_pred.shape,has_pred.shape,ctrs.shape)
-                outputs = net(data)
-                loss_out = loss_f(outputs,data)
-                post.append(metrics,loss_out.item(),outputs,data)
-                msg,_ = post.display(metrics, 0, epoch, num_epochs, "Validation")
-                #post.plot(metrics, data, outputs, msg, 6, True)
-                post.plot(metrics, data, outputs, msg, 6, False)
-                break
+                val1(net,val_loader,loss_f,epoch,num_epochs, post)
+                # outputs = net(data)
+                # loss_out = loss_f(outputs,data)
+                # post.append(metrics,loss_out.item(),outputs,data)
+                # msg,_ = post.display(metrics, 0, epoch, num_epochs, "Validation")
+                # post.plot(metrics, data, outputs, msg, 6, False)
+                # break
             break
 
 if __name__ == "__main__":

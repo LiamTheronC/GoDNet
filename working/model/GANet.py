@@ -891,32 +891,21 @@ class GreatNet(nn.Module):
         super().__init__()
 
         self.config = config
-        num_acrs = len(config['acrs'])
 
         self.actor_net = ActorNet(config)
         self.map_net = MapNet(config)
 
-        a2m,m2m,m2a,a2a = [],[],[],[]
-        for i in range(num_acrs + 1):
-            a2m.append(A2M(config))
-            m2m.append(M2M(config))
-            m2a.append(M2A(config))
-            a2a.append(A2A(config))
-
-        self.a2m = nn.ModuleList(a2m)
-        self.m2m = nn.ModuleList(m2m)
-        self.m2a = nn.ModuleList(m2a)
-        self.a2a = nn.ModuleList(a2a)
-
-        anchor_net = []
-        for i in range(num_acrs):
-            anchor_net.append(Anchor(config))
-        
-        self.anchor_net = nn.ModuleList(anchor_net)
-        
+        self.a2m = A2M(config)
+        self.m2m = M2M(config)
+        self.m2a = M2A(config)
+        self.a2a = A2A(config)       
+        self.anchor_net = Anchor(config)
+       
         self.pred_net = PredNet(config)
     
     def forward(self, data: Dict) -> Tensor:
+
+        num_acrs = len(self.config['acrs'])
 
         actors, actor_idcs = actor_gather(data["feats"])
         actor_ctrs = [torch.stack(i,0) for i in data["ctrs"]]
@@ -938,14 +927,14 @@ class GreatNet(nn.Module):
 
         ctrs_ =  actor_ctrs
         acrs_ = []
-        for i in range(len(self.a2m)):
-            nodes = self.a2m[i](nodes, graph, actors, actor_idcs, ctrs_)
-            nodes = self.m2m[i](nodes, graph)
-            actors = self.m2a[i](actors, actor_idcs, ctrs_, nodes, node_idcs, node_ctrs)
-            actors = self.a2a[i](actors, actor_idcs, ctrs_) #(A,128)
+        for i in range(num_acrs + 1):
+            nodes = self.a2m(nodes, graph, actors, actor_idcs, ctrs_)
+            nodes = self.m2m(nodes, graph)
+            actors = self.m2a(actors, actor_idcs, ctrs_, nodes, node_idcs, node_ctrs)
+            actors = self.a2a(actors, actor_idcs, ctrs_) #(A,128)
 
-            if i < len(self.anchor_net):
-                acr_out, new_ctrs = self.anchor_net[i](actors, actor_idcs, ctrs_)
+            if i < num_acrs :
+                acr_out, new_ctrs = self.anchor_net(actors, actor_idcs, ctrs_)
                 ctrs_ = new_ctrs
                 acrs_.append(acr_out)
 
