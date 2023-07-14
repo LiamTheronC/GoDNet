@@ -74,6 +74,7 @@ class MotionMetrics(tf.keras.metrics.Metric):
                    ground_truth_trajectory, ground_truth_is_valid,
                    prediction_ground_truth_indices,
                    prediction_ground_truth_indices_mask, object_type):
+    
     self._prediction_trajectory.append(prediction_trajectory)
     self._prediction_score.append(prediction_score)
     self._ground_truth_trajectory.append(ground_truth_trajectory)
@@ -107,6 +108,7 @@ class MotionMetrics(tf.keras.metrics.Metric):
     interval = (
         self._metrics_config.track_steps_per_second //
         self._metrics_config.prediction_steps_per_second)
+    
     prediction_trajectory = prediction_trajectory[...,
                                                   (interval - 1)::interval, :]
 
@@ -121,8 +123,6 @@ class MotionMetrics(tf.keras.metrics.Metric):
         object_type=object_type)
   
 
-
-
 metrics_config = _default_metrics_config()
 motion_metrics = MotionMetrics(metrics_config)
 
@@ -133,8 +133,7 @@ motion_metrics = MotionMetrics(metrics_config)
 train_metric_values = motion_metrics.result()
 print(train_metric_values)
 
-metric_names = config_util.get_breakdown_names_from_motion_config(
-    metrics_config)
+metric_names = config_util.get_breakdown_names_from_motion_config(metrics_config)
 
 for i, m in enumerate(
     ['min_ade', 'min_fde', 'miss_rate', 'overlap_rate', 'map']):

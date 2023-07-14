@@ -28,7 +28,7 @@ class W_Dataset(Dataset):
 
         data_path = os.path.join(self.path,self.files[index])
         data = torch.load(data_path)
-        print(data_path)
+        #print(data_path)
 
         return data
     
@@ -118,15 +118,18 @@ def main():
     start_time = time.time()
     with torch.no_grad():
         for epoch in range(num_epochs):
-            for batch_idx, data in enumerate(val_loader):
-                val1(net,val_loader,loss_f,epoch,num_epochs, post)
-                # outputs = net(data)
-                # loss_out = loss_f(outputs,data)
-                # post.append(metrics,loss_out.item(),outputs,data)
-                # msg,_ = post.display(metrics, 0, epoch, num_epochs, "Validation")
-                # post.plot(metrics, data, outputs, msg, 6, False)
-                # break
+            
+            val1(net,val_loader,loss_f,epoch,num_epochs, post)
             break
+
+            # for batch_idx, data in enumerate(val_loader):
+            #     outputs = net(data)
+            #     loss_out = loss_f(outputs,data)
+            #     post.append(metrics,loss_out.item(),outputs,data)
+            #     msg,_ = post.display(metrics, 0, epoch, num_epochs, "Validation")
+            #     post.plot(metrics, data, outputs, msg, 6, False)
+            #     break
+            # break
 
 if __name__ == "__main__":
     main()

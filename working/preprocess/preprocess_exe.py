@@ -14,7 +14,7 @@ config['cross_dist'] = 6
 config['downsample_factor'] = 10
 config["dim_feats"] = {'xyvp':[6,2], 'xyz':[4,3], 'xy':[3,2], 'xyp':[4,2], 'vp':[4,2], 'vpt':[5,2]}
 config['type_feats'] = 'vp'
-config['f'] = '25f'
+config['f'] = '100f'
 config['aug'] = False
 config['light'] = True
 config['delete'] = ['scenario_id', 'time_stamps', 'current_time_index',
@@ -23,7 +23,7 @@ config['delete'] = ['scenario_id', 'time_stamps', 'current_time_index',
 
 def main():
 
-    path = config['val']
+    path = config['train']
 
     if path == config['train']:
         word = 'train'
@@ -31,7 +31,7 @@ def main():
         word = 'val'
     train_dataset = Waymo_Motion_DataLoader(path)
    
-    j = 24
+    j = 99
     scen_list = train_dataset[j].read_TFRecord
     processed_list = Waymo_Motion_Preprocess(scen_list, config)
 

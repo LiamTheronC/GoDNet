@@ -16,8 +16,10 @@ result['vp_5f_laneGCN'] = 'loss:1.16 -- fde:1.92 -- ade:0.79 -- Tfde:7.26 -- Tad
 result['vp_5f_sparse'] = 'loss:1.10 -- fde:1.72 -- ade:0.73 -- Tfde:6.56 -- Tade:2.69' #100
 result['vp_5f_GANet'] = 'loss:4.30 -- fde:1.63 -- ade:0.71 -- Tfde:6.19 -- Tade:2.60' #110, 48, cls=5
 result['vp_5f_GANet'] = 'loss:4.30 -- fde:1.59 -- ade:0.70 -- Tfde:5.98 -- Tade:2.53' #130, 48, cls=2
-result['vp_5f_GANet']'loss:3.73 -- fde:1.57 -- ade:0.69 -- Tfde:5.88 -- Tade:2.49' # 90, 246, cls = 2
-result['vp_5f_GANet1']'loss:3.51 -- fde:1.55 -- ade:0.67 -- Tfde:5.82 -- Tade:2.43'# 80, 246, cls =2
+result['vp_5f_GANet'] = 'loss:3.73 -- fde:1.57 -- ade:0.69 -- Tfde:5.88 -- Tade:2.49' # 90, 246, cls = 2
+result['vp_5f_GANet1'] = 'loss:3.51 -- fde:1.55 -- ade:0.67 -- Tfde:5.82 -- Tade:2.43'# 80, 246, cls =2
+result['vp_5f_GANet1'] = 'loss:3.78 -- fde:1.82 -- ade:0.78 -- Tfde:6.68 -- Tade:2.70'# 40, 246, cls=2, M2A,A2A
+result['vp_5f_laneGCN'] = 'loss:1.27 -- fde:2.18 -- ade:0.88 -- Tfde:8.01 -- Tade:3.13' # 30, M2A,A2A
 
 result['xy_5f_GANet'] = 'loss:4.34 -- fde:1.65 -- ade:0.72 -- Tfde:6.09 -- Tade:2.55' #120,48, cls =2
 
@@ -28,6 +30,11 @@ result['xy_10f_laneGCN_focal'] = 'loss:3.24 -- fde:2.14 -- ade:0.92 -- Tfde:6.74
 result['vpt_10f_laneGCN1'] = 'loss:1.02 -- fde:1.62 -- ade:0.68 -- Tfde:6.27 -- Tade:2.54'
 result['xy_10f_GANet'] = 'loss:2.43 -- fde:1.53 -- ade:0.68 -- Tfde:5.73 -- Tade:2.44'
 result['xy_10f_GANet_midgoal'] = 'loss:1.66 -- fde:1.45 -- ade:0.63 -- Tfde:5.51 -- Tade:2.28'
+
+
+-----------------------------------------------------------------------------------------------------------------------
+
+
 
 
 

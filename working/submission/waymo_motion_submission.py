@@ -72,6 +72,7 @@ def parse_config():
 
     return args, cfg
 
+
 def save_to_file(scnerio_predictions, args):
     print('saving....')
     submission = motion_submission_pb2.MotionChallengeSubmission(
@@ -94,6 +95,7 @@ def save_to_file(scnerio_predictions, args):
         tar.close()
 
     print('Finished!')
+
 
 def generate_prediction_dicts(batch_dict, output_path=None):
         """
@@ -139,6 +141,7 @@ def generate_prediction_dicts(batch_dict, output_path=None):
 
         return pred_dict_list
 
+
 def traj_serialize(trajectories, scores, object_ids):
     scored_obj_trajs = []
     for i in range(trajectories.shape[0]):
@@ -147,6 +150,7 @@ def traj_serialize(trajectories, scores, object_ids):
         object_traj = motion_submission_pb2.ScoredTrajectory(confidence=scores[i], trajectory=traj)
         scored_obj_trajs.append(object_traj)
     return motion_submission_pb2.SingleObjectPrediction(trajectories=scored_obj_trajs, object_id=object_ids)
+
 
 def serialize_single_scenario(scenario_list):
     single_prediction_list = []
@@ -158,6 +162,7 @@ def serialize_single_scenario(scenario_list):
         single_prediction_list.append(single_prediction)
     prediction_set = motion_submission_pb2.PredictionSet(predictions=single_prediction_list)
     return motion_submission_pb2.ChallengeScenarioPredictions(scenario_id=scenario_id, single_predictions=prediction_set)
+
 
 def serialize_single_batch(final_pred_dicts, batch_sample_count, scenario_predictions):
     i = 0

@@ -345,7 +345,7 @@ class MapNet(nn.Module):
             temp = graph["feats"]
             return (
                 temp.new().resize_(0),
-                [temp.new().long().resize_(0) for x in graph["node_idcs"]],
+                [temp.new().long().resize_(0) for x in graph["idcs"]],
                 temp.new().resize_(0),
             )
 
@@ -921,6 +921,7 @@ class GreatNet(nn.Module):
         graph = to_long(data['graph'])
         graph = graph_gather(graph)
         graph = gpu(graph)
+        
         nodes, node_idcs, node_ctrs = self.map_net(graph) # (B, 128)
 
         #------------------------------------------------------------#

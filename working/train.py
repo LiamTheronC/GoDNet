@@ -14,8 +14,8 @@ from metrics.metrics import Postprocess
 import time
 from datetime import date
 
-from model.GANet1 import GreatNet # GANet, laneGCN
-from losses.ganet import Loss
+from model.laneGCN import GreatNet # GANet, laneGCN
+from losses.lanegcn import Loss
 
 
 class W_Dataset(Dataset):
@@ -113,8 +113,8 @@ def main():
     config['acrs'] = [20,40,60] # [40,80]
     config["dim_feats"] = {'xyvp':[6,2], 'xyz':[4,3], 'xy':[3,2], 'xyp':[4,2], 'vp':[4,2], 'vpt':[5,2]}
     config['type_feats'] = 'vp'
-    config['f'] = '25f'
-    config['name'] = 'GANet1_246'
+    config['f'] = '100f'
+    config['name'] = 'laneGCN'
     config['train_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/train_' + config['f'] 
     config['val_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/val_' + config['f']
     config['dd'] = date.today().strftime('%m%d')
