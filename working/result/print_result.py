@@ -19,7 +19,9 @@ result['vp_5f_GANet'] = 'loss:4.30 -- fde:1.59 -- ade:0.70 -- Tfde:5.98 -- Tade:
 result['vp_5f_GANet'] = 'loss:3.73 -- fde:1.57 -- ade:0.69 -- Tfde:5.88 -- Tade:2.49' # 90, 246, cls = 2
 result['vp_5f_GANet1'] = 'loss:3.51 -- fde:1.55 -- ade:0.67 -- Tfde:5.82 -- Tade:2.43'# 80, 246, cls =2
 result['vp_5f_GANet1'] = 'loss:3.78 -- fde:1.82 -- ade:0.78 -- Tfde:6.68 -- Tade:2.70'# 40, 246, cls=2, M2A,A2A
+result['vp_5f_GANet1'] = 'loss:4.42 -- fde:2.23 -- ade:0.93 -- Tfde:7.95 -- Tade:3.15'# 30,246, A2M, M2A, A2A
 result['vp_5f_laneGCN'] = 'loss:1.27 -- fde:2.18 -- ade:0.88 -- Tfde:8.01 -- Tade:3.13' # 30, M2A,A2A
+'loss:4.42 -- fde:2.23 -- ade:0.93 -- Tfde:7.95 -- Tade:3.15'# 30,246, A2M, M2A, A2A
 
 result['xy_5f_GANet'] = 'loss:4.34 -- fde:1.65 -- ade:0.72 -- Tfde:6.09 -- Tade:2.55' #120,48, cls =2
 
