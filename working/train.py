@@ -14,8 +14,8 @@ from metrics.metrics import Postprocess
 import time
 from datetime import date
 
-from model.Order import GreatNet # GANet, laneGCN
-from losses.lanegcn import Loss
+from model.GANet import GreatNet # GANet, laneGCN
+from losses.ganet import Loss
 
 
 class W_Dataset(Dataset):
@@ -114,7 +114,7 @@ def main():
     config["dim_feats"] = {'xyvp':[6,2], 'xyz':[4,3], 'xy':[3,2], 'xyp':[4,2], 'vp':[4,2], 'vpt':[5,2]}
     config['type_feats'] = 'vp'
     config['f'] = '5f'
-    config['name'] = 'Order'
+    config['name'] = 'GANet_246'
     config['train_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/train_' + config['f'] 
     config['val_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/val_' + config['f']
     config['dd'] = date.today().strftime('%m%d')
@@ -128,7 +128,7 @@ def main():
     post = Postprocess(config)
 
     optimizer = optim.Adam(net.parameters(), lr = config['lr'])
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
+    #scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.08)
 
     batch_size = 4
     dataset_train = W_Dataset(config['train_split'])
@@ -159,7 +159,7 @@ def main():
     Tfde_a = 100
     for epoch in range(num_epochs):
         train1(net,train_loader,loss_f,optimizer,epoch,num_epochs,post)
-        scheduler.step()
+        #scheduler.step()
         if (epoch + 1) % 10 == 0 or epoch == 0:
             Tfde_a = val1(net,val_loader,loss_f,epoch,num_epochs, post, Tfde_a, config)
 

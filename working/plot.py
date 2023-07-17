@@ -14,8 +14,8 @@ from utils import collate_fn, pre_gather
 import matplotlib.pyplot as plt
 import time
 
-from model.GANet1 import GreatNet
-from losses.ganet import Loss
+from model.Order import GreatNet
+from losses.lanegcn import Loss
 
 
 class W_Dataset(Dataset):
@@ -87,10 +87,10 @@ def main():
     config["dim_feats"] = {'xyvp':[6,2], 'xyz':[4,3], 'xy':[3,2], 'xyp':[4,2], 'vp':[4,2], 'vpt':[5,2]}
     config['type_feats'] = 'vp'
     config['f'] = '25f'
-    config['name'] = 'GANet1_246'
+    config['name'] = 'Order'
     config['train_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/train_' + config['f'] 
     config['val_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/val_' + '5f'
-    config['model_weights'] = 'weights/'+ config['name'] + '_' + config['type_feats'] + '_' + config['f'] + '0712.pth'
+    config['model_weights'] = 'weights/'+ config['name'] + '_' + config['type_feats'] + '_' + config['f'] + '0714.pth'
 
     net = GreatNet(config)
     net.load_state_dict(torch.load(config['model_weights']))
@@ -119,17 +119,17 @@ def main():
     with torch.no_grad():
         for epoch in range(num_epochs):
             
-            val1(net,val_loader,loss_f,epoch,num_epochs, post)
-            break
-
-            # for batch_idx, data in enumerate(val_loader):
-            #     outputs = net(data)
-            #     loss_out = loss_f(outputs,data)
-            #     post.append(metrics,loss_out.item(),outputs,data)
-            #     msg,_ = post.display(metrics, 0, epoch, num_epochs, "Validation")
-            #     post.plot(metrics, data, outputs, msg, 6, False)
-            #     break
+            # val1(net,val_loader,loss_f,epoch,num_epochs, post)
             # break
+
+            for batch_idx, data in enumerate(val_loader):
+                outputs = net(data)
+                loss_out = loss_f(outputs,data)
+                post.append(metrics,loss_out.item(),outputs,data)
+                msg,_ = post.display(metrics, 0, epoch, num_epochs, "Validation")
+                post.plot(metrics, data, outputs, msg, 6, False)
+                break
+            break
 
 if __name__ == "__main__":
     main()

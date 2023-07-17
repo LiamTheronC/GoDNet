@@ -672,23 +672,26 @@ class Order(nn.Module):
                         )
 
         self.dom = nn.Sequential(
-            Linear(n_actor, n_actor, norm=norm, ng=ng),
+            LinearRes(n_actor, n_actor, norm=norm, ng=ng),
             nn.Linear(n_actor, n_actor, bias=False),
         )
 
-        self.sub = nn.Linear(n_actor, n_actor, bias=False)
+        self.sub = nn.Sequential(
+            LinearRes(n_actor, n_actor, norm=norm, ng=ng),
+            nn.Linear(n_actor, n_actor, bias=False),
+        )
         self.norm = nn.GroupNorm(gcd(ng, n_actor), n_actor)
         self.linear = Linear(n_actor, n_actor, norm=norm, ng=ng, act=False)
         self.relu = nn.ReLU(inplace=True)
     
 
-    def forward(self, actors_, actor_idcs):
+    def forward(self, actors, actor_idcs):
 
-        res = actors_
+        res = actors
         
         count = 0
         order_indx = []
-        order_score = self.order(actors_)
+        order_score = self.order(actors)
 
         batch_size = len(actor_idcs)
         for i in range(batch_size):
@@ -704,9 +707,9 @@ class Order(nn.Module):
         hi = order_indx[:, 0]
         wi = order_indx[:, 1]
 
-        dom = self.dom(actors_[wi])
+        dom = self.dom(actors[wi])
         
-        sub = self.sub(actors_)
+        sub = self.sub(actors)
        
         sub.index_add_(0, hi, dom)
         sub = self.norm(sub)
@@ -714,14 +717,13 @@ class Order(nn.Module):
 
         sub = self.linear(sub)
         sub += res
-        out = self.relu(sub)
 
-        return out
+        return sub
 
 
 
 class PredNet(nn.Module):
-    
+
     def __init__(self, config):
         super(PredNet, self).__init__()
         self.config = config

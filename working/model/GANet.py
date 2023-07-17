@@ -924,12 +924,13 @@ class GreatNet(nn.Module):
         nodes, node_idcs, node_ctrs = self.map_net(graph) # (B, 128)
 
         #------------------------------------------------------------#
-
+        
         ctrs_ =  actor_ctrs
+        # nodes = self.a2m(nodes, graph, actors, actor_idcs, ctrs_)
+        # nodes = self.m2m(nodes, graph)
+
         acrs_ = []
         for i in range(num_acrs + 1):
-            #nodes = self.a2m(nodes, graph, actors, actor_idcs, ctrs_)
-            #nodes = self.m2m(nodes, graph)
             actors = self.m2a(actors, actor_idcs, ctrs_, nodes, node_idcs, node_ctrs)
             actors = self.a2a(actors, actor_idcs, ctrs_) #(A,128)
 
