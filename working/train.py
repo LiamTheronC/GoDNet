@@ -14,8 +14,8 @@ from metrics.metrics import Postprocess
 import time
 from datetime import date
 
-from model.GANet import GreatNet # GANet, laneGCN
-from losses.ganet import Loss
+from model.Order import GreatNet # GANet, laneGCN
+from losses.lanegcn import Loss
 
 
 class W_Dataset(Dataset):
@@ -105,16 +105,18 @@ def main():
     config["pred_step"] = 1
     config["num_preds"] = config["pred_size"] // config["pred_step"]
     config["cls_th"] = 2.0 #5.0, 2.0
+    config["cls_th_2"] = 0.6
     config["cls_ignore"] = 0.2
     config["mgn"] = 0.2
     config["cls_coef"] = 1.0
     config["reg_coef"] = 1.0
     config["metrics_preds"] = 80
     config['acrs'] = [20,40,60] # [40,80]
+    config['cut'] = range(10,50)
     config["dim_feats"] = {'xyvp':[6,2], 'xyz':[4,3], 'xy':[3,2], 'xyp':[4,2], 'vp':[4,2], 'vpt':[5,2]}
     config['type_feats'] = 'vp'
     config['f'] = '5f'
-    config['name'] = 'GANet_246'
+    config['name'] = 'Order'
     config['train_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/train_' + config['f'] 
     config['val_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/val_' + config['f']
     config['dd'] = date.today().strftime('%m%d')

@@ -673,10 +673,12 @@ class Order(nn.Module):
 
         self.dom = nn.Sequential(
             LinearRes(n_actor, n_actor, norm=norm, ng=ng),
+            LinearRes(n_actor, n_actor, norm=norm, ng=ng),
             nn.Linear(n_actor, n_actor, bias=False),
         )
 
         self.sub = nn.Sequential(
+            LinearRes(n_actor, n_actor, norm=norm, ng=ng),
             LinearRes(n_actor, n_actor, norm=norm, ng=ng),
             nn.Linear(n_actor, n_actor, bias=False),
         )
@@ -849,8 +851,8 @@ class GreatNet(nn.Module):
 
         #------------------------------------------------------------#
         
-        nodes = self.a2m(nodes, graph, actors, actor_idcs, actor_ctrs)
-        nodes = self.m2m(nodes, graph)
+        # nodes = self.a2m(nodes, graph, actors, actor_idcs, actor_ctrs)
+        # nodes = self.m2m(nodes, graph)
         actors = self.m2a(actors, actor_idcs, actor_ctrs, nodes, node_idcs, node_ctrs)
         actors = self.a2a(actors, actor_idcs, actor_ctrs) #(A,128)
 

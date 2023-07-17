@@ -21,7 +21,6 @@ result['vp_5f_GANet1'] = 'loss:3.51 -- fde:1.55 -- ade:0.67 -- Tfde:5.82 -- Tade
 result['vp_5f_GANet1'] = 'loss:3.78 -- fde:1.82 -- ade:0.78 -- Tfde:6.68 -- Tade:2.70'# 40, 246, cls=2, M2A,A2A
 result['vp_5f_GANet1'] = 'loss:4.42 -- fde:2.23 -- ade:0.93 -- Tfde:7.95 -- Tade:3.15'# 30,246, A2M, M2A, A2A
 
-result['vp_5f_GANet1'] = 'loss:3.60 -- fde:1.53 -- ade:0.68 -- Tfde:5.71 -- Tade:2.42'# 70, 246, A2M,M2M, (M2A,A2A)
 result['vp_5f_laneGCN'] = 'loss:1.27 -- fde:2.18 -- ade:0.88 -- Tfde:8.01 -- Tade:3.13' # 30, M2A,A2A
 
 
@@ -36,10 +35,14 @@ result['xy_10f_GANet'] = 'loss:2.43 -- fde:1.53 -- ade:0.68 -- Tfde:5.73 -- Tade
 result['xy_10f_GANet_midgoal'] = 'loss:1.66 -- fde:1.45 -- ade:0.63 -- Tfde:5.51 -- Tade:2.28'
 
 
--------------------------------------final----------------------------------------------------------------------------
-result['vp_5f_GANet'] = 'loss:3.60 -- fde:1.53 -- ade:0.68 -- Tfde:5.71 -- Tade:2.42'# 70, 246, A2M,M2M, (M2A,A2A)
-#246,(M2A,A2A)
+-------------------------------------final-----------------------------------------------------------------------------
+result['vp_5f_GANet'] = 'loss:3.60 -- fde:1.53 -- ade:0.68 -- Tfde:5.71 -- Tade:2.42' # 70, 246, A2M,M2M, (M2A,A2A)
+result['vp_5f_GANet'] = 'loss:3.06 -- fde:1.32 -- ade:0.60 -- Tfde:4.95 -- Tade:2.16'#246,(M2A,A2A)
 #246,(A2M,M2M,M2A,A2A)
+
+
+
+
 
 
 def main():

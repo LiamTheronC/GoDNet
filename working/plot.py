@@ -14,8 +14,8 @@ from utils import collate_fn, pre_gather
 import matplotlib.pyplot as plt
 import time
 
-from model.Order import GreatNet
-from losses.lanegcn import Loss
+from model.GANet import GreatNet
+from losses.ganet import Loss
 
 
 class W_Dataset(Dataset):
@@ -77,20 +77,21 @@ def main():
     config["pred_step"] = 1
     config["num_preds"] = config["pred_size"] // config["pred_step"]
     config["cls_th"] = 2.0
+    config["cls_th_2"] = 0.6
     config["cls_ignore"] = 0.2
     config["mgn"] = 0.2
     config["cls_coef"] = 1.0
     config["reg_coef"] = 1.0
     config["metrics_preds"] = 80
     config['acrs'] = [20,40,60]
-    config['mid_num'] = 40
+    config['cut'] = range(10,50)
     config["dim_feats"] = {'xyvp':[6,2], 'xyz':[4,3], 'xy':[3,2], 'xyp':[4,2], 'vp':[4,2], 'vpt':[5,2]}
     config['type_feats'] = 'vp'
-    config['f'] = '25f'
-    config['name'] = 'Order'
+    config['f'] = '5f'
+    config['name'] = 'GANet_246'
     config['train_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/train_' + config['f'] 
     config['val_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/val_' + '5f'
-    config['model_weights'] = 'weights/'+ config['name'] + '_' + config['type_feats'] + '_' + config['f'] + '0714.pth'
+    config['model_weights'] = 'weights/'+ config['name'] + '_' + config['type_feats'] + '_' + config['f'] + '0717.pth'
 
     net = GreatNet(config)
     net.load_state_dict(torch.load(config['model_weights']))
@@ -104,7 +105,7 @@ def main():
     
     batch_size = 1
     
-    dataset_val = W_Dataset(config['val_split'])
+    dataset_val = W_Dataset(config['train_split'])
     val_loader = DataLoader(dataset_val, 
                            batch_size = batch_size ,
                            collate_fn = collate_fn, 

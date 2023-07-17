@@ -32,6 +32,7 @@ def get_lastIdcs(reg, gt_preds, has_preds, num_pred):
     return reg, gt_preds, has_preds, last_idcs, row_idcs
 
 
+
 def get_minFDE(reg, data, num_preds = 80, num_mods = 6, target = False):
 
     gt_preds, has_preds = gather(data['gt_preds']), gather(data['has_preds'])
@@ -67,6 +68,7 @@ def get_minFDE(reg, data, num_preds = 80, num_mods = 6, target = False):
     #     print(gt_preds[row_idcs, last_idcs])
 
     return fde, min_idcs
+
 
 
 def get_minADE(reg, data, num_preds = 80, num_mods = 6, target = False):
@@ -382,6 +384,8 @@ def panorama(data, path = False):
     else:
         plt.show()
 
+
+
 def plot_trajs(data):
     trajs = data['trajs_xyz']
     masks = data['valid_masks']
@@ -400,3 +404,4 @@ def plot_trajs(data):
     plt.xlabel('x(m)')
     plt.ylabel('y(m)')
     plt.show()
+
