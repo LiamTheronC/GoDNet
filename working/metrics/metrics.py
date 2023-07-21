@@ -181,7 +181,7 @@ class Postprocess():
         return msg2,out[3]
     
 
-    def plot(self, metrics, data, outputs, msg, key = 1, all = True):
+    def plot(self, metrics, data, outputs, msg, key = 1, all = True, x=0):
 
         f_idcs = metrics['f_idcs'][0]
         
@@ -213,42 +213,48 @@ class Postprocess():
         engage_ids = engage_ids[mask]
 
         # prediction
+        lw = 2
         if key == 1:# plot only the minFDE of each object
             regs = regs[row_idcs,f_idcs].cpu().detach()
             for j in range(len(regs)):
                 line = regs[j][has_preds[j]]
                 if engage_ids[j] in target_ids:
-                    plt.plot(line.T[0],line.T[1],color='black',linewidth=0.8)
+                    plt.plot(line.T[0],line.T[1],color='black',linewidth=lw)
                 elif all:
-                    plt.plot(line.T[0],line.T[1],color='green',linewidth=0.8)
+                    plt.plot(line.T[0],line.T[1],color='green',linewidth=lw)
 
         elif key == 6:# plot all the six outputs of each object
             for i in range(self.config["num_mods"]):
                 ri = regs[:,i].cpu().detach()
                 for j in range(len(ri)):
                     line = ri[j][has_preds[j]]
-                    if engage_ids[j] in target_ids:
-                        plt.plot(line.T[0],line.T[1],color='green', linewidth=0.8, alpha = 0.2)
+                    #if engage_ids[j] in target_ids:
+                    if engage_ids[j] == target_ids[x]:
+                        plt.plot(line.T[0],line.T[1],color='green', linewidth=lw, alpha = 0.5)
+                        plt.scatter(line.T[0][-1],line.T[1][-1],s=50, marker='o', color ='green')
                     elif all:
-                        plt.plot(line.T[0],line.T[1],color='green', linewidth=0.8, alpha = 0.2)
+                        plt.plot(line.T[0],line.T[1],color='green', linewidth=lw, alpha = 0.5)
 
             regs = regs[row_idcs,f_idcs].cpu().detach()
             for j in range(len(regs)):
                 line = regs[j][has_preds[j]]
-                if engage_ids[j] in target_ids:
-                    plt.plot(line.T[0],line.T[1],color='black',linewidth=0.8)
+                #if engage_ids[j] in target_ids:
+                if engage_ids[j] == target_ids[x]:
+                    plt.plot(line.T[0],line.T[1],color='black',linewidth=lw)
+                    plt.scatter(line.T[0][-1],line.T[1][-1],s=50, marker='o', color ='black')
                 elif all:
-                    plt.plot(line.T[0],line.T[1],color='green',linewidth=0.8)
+                    plt.plot(line.T[0],line.T[1],color='green',linewidth=lw)
         
         # ground truth
         for j in range(len(gt_preds)):
             line = gt_preds[j][has_preds[j]]
             if len(line) > 0:
-                if engage_ids[j] in target_ids:
-                    plt.plot(line.T[0],line.T[1],color='red', linewidth = 1.0, linestyle='--')
-                    plt.scatter(line.T[0][0],line.T[1][0],s=50, marker='*', color ='skyblue')
+                #if engage_ids[j] in target_ids:
+                if engage_ids[j] == target_ids[x]:
+                    plt.plot(line.T[0],line.T[1],color='red', linewidth = lw, linestyle='-')
+                    plt.scatter(line.T[0][-1],line.T[1][-1],s=50, marker='o', color ='red')
                 elif all:
-                    plt.plot(line.T[0],line.T[1],color='red', linewidth = 1.0, linestyle='--')
+                    plt.plot(line.T[0],line.T[1],color='red', linewidth = lw, linestyle='-')
                     plt.scatter(line.T[0][0],line.T[1][0],s=20, color ='red')
         
         # graph
@@ -257,6 +263,11 @@ class Postprocess():
 
         ctrs = data['graph'][0]['ctrs'][:, :2]
         ctrs = torch.matmul(ctrs, rot) + orig[:2]
+
+        # u = data['graph'][0]['suc'][0]['u']
+        # v = data['graph'][0]['suc'][0]['v']
+        # for i in range(len(u)):
+        #     plt.plot([ctrs[u[i]][0],ctrs[v[i]][0]],[ctrs[u[i]][1],ctrs[v[i]][1]],linestyle='--',linewidth = 0.5, color ='black')
         plt.scatter(ctrs.T[0], ctrs.T[1], c = 'black',s = 0.05)
        
         # trajectory history 
@@ -272,16 +283,20 @@ class Postprocess():
         if all == False:
             trajs = [trajs[i] for i in target_indx]
             masks = [masks[i] for i in target_indx]
+            trajs
 
         for i,traj in enumerate(trajs):
-            traj = traj[:12][masks[i][:12]] 
-            plt.plot(traj.T[0],traj.T[1],color='blue',linewidth=1.0, linestyle='--')
+            traj = traj[:11][masks[i][:11]] 
+            if i == x:
+                plt.plot(traj.T[0],traj.T[1],color='orange',linewidth=lw, linestyle='-')
+                plt.scatter(traj.T[0][-1],traj.T[1][-1],s=50, marker='o', color ='orange')
             
         
         plt.gca().set_aspect('equal')
-        plt.title(msg)
+        #plt.title(msg)
         plt.xlabel('x(m)')
         plt.ylabel('y(m)')
+        #plt.savefig('/home/avt/Desktop/p1.png', dpi=2000)
         plt.show()
 
 

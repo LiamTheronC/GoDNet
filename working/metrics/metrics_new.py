@@ -142,7 +142,7 @@ class Postprocess():
 
         m = dict()
         
-        m['loss'] = loss
+        m['loss'] = torch.tensor([loss])
         m['fde'] = minDist_fde
         m['ade'] = minDist_ade
         m['Tfde'] = minDist_fdeT
@@ -156,7 +156,7 @@ class Postprocess():
                 metrics[key] = [m[key]]
         
         for key in ['loss', 'fde', 'ade', 'Tfde', 'Tade']:
-            metrics[key] = torch.concatenate(metrics[key],0)
+            metrics[key] = torch.concatenate(metrics[key])
 
         return metrics
 
@@ -168,8 +168,8 @@ class Postprocess():
             if key in ['loss','fde','ade','Tfde','Tade']:
                 out.append(sum(metrics[key]).item()/len(metrics[key]))
 
-        miss_rate = missRate(metrics, self.config)
-        metrics['mr'] = miss_rate
+        # miss_rate = missRate(metrics, self.config)
+        # metrics['mr'] = miss_rate
         
     
         if mode == 'Train':

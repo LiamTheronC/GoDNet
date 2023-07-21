@@ -53,16 +53,16 @@ class PredLoss(nn.Module):
 
         # ade, find the idcs(out of 6) with the minimal ade in cut, for each agent -> min_idcs
         dist_= []
-        for i in range(reg):
-            rr = reg[i].transpose(0,1)[l] #(6,80,2) -> (80,6,2)
-            gg = gt_preds[i].unsqueeze(1)[l] #(80,2) -> (80,1,2)
-            hh = has_preds[i][l] #(80,)
+        for i in range(len(reg)):
+            rr = reg[i].transpose(0,1)[l] #(6,80,2) -> (80,6,2) -> (40,6,2)
+            gg = gt_preds[i].unsqueeze(1)[l] #(80,2) -> (80,1,2) -> (40,1,2)
+            hh = has_preds[i][l] #(80,) -> (40,1)
 
             dd = torch.sqrt(((rr[hh] - gg[hh])**2).sum(2)).mean(0).unsqueeze(0) # (N,6) -> (6,) -> (1,6)
             dist_.append(dd)
         
         dist_ = torch.concatenate(dist_,0)
-        a_dist, min_idcs = dist.min(1)
+        a_dist, min_idcs = dist_.min(1)
         row_idcs = torch.arange(len(min_idcs)).long().to(min_idcs.device)
         
         # fde, find the fde corresponding to idcs, for each agent -> min_dist

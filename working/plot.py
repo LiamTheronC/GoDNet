@@ -28,7 +28,7 @@ class W_Dataset(Dataset):
 
         data_path = os.path.join(self.path,self.files[index])
         data = torch.load(data_path)
-        #print(data_path)
+        print(data_path)
 
         return data
     
@@ -46,7 +46,7 @@ def val1(net, val_loader, loss_f, epoch, num_epochs, post):
 
             outputs = net(data)
             loss_out = loss_f(outputs,data)
-            post.append(metrics,loss_out.item(),outputs,data)
+            post.append(metrics,loss_out,outputs,data)
     
     dt = time.time() - start_time
     _, Tfde = post.display(metrics, dt, epoch, num_epochs, "Validation")
@@ -60,6 +60,8 @@ def main():
     # torch.cuda.manual_seed(seed)
     # np.random.seed(seed)
     # random.seed(seed)
+
+    #/home/avt/prediction/Waymo/data_processed/vp/val_5f/2_282.pt
 
     config = dict()
     config['n_actornet'] = 128
@@ -87,11 +89,12 @@ def main():
     config['cut'] = range(10,50)
     config["dim_feats"] = {'xyvp':[6,2], 'xyz':[4,3], 'xy':[3,2], 'xyp':[4,2], 'vp':[4,2], 'vpt':[5,2]}
     config['type_feats'] = 'vp'
-    config['f'] = '5f'
-    config['name'] = 'GANet_246'
+    config['f'] = '100f'
+    config['name'] = 'GANet'
     config['train_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/train_' + config['f'] 
     config['val_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/val_' + '5f'
-    config['model_weights'] = 'weights/'+ config['name'] + '_' + config['type_feats'] + '_' + config['f'] + '0717.pth'
+    config['plot'] = '/home/avt/prediction/Waymo/data_processed/plot'
+    config['model_weights'] = 'weights/'+ config['name'] + '_' + config['type_feats'] + '_' + config['f'] + '0719.pth'
 
     net = GreatNet(config)
     net.load_state_dict(torch.load(config['model_weights']))
@@ -105,7 +108,7 @@ def main():
     
     batch_size = 1
     
-    dataset_val = W_Dataset(config['train_split'])
+    dataset_val = W_Dataset(config['plot'])
     val_loader = DataLoader(dataset_val, 
                            batch_size = batch_size ,
                            collate_fn = collate_fn, 
@@ -126,9 +129,9 @@ def main():
             for batch_idx, data in enumerate(val_loader):
                 outputs = net(data)
                 loss_out = loss_f(outputs,data)
-                post.append(metrics,loss_out.item(),outputs,data)
+                post.append(metrics,loss_out,outputs,data)
                 msg,_ = post.display(metrics, 0, epoch, num_epochs, "Validation")
-                post.plot(metrics, data, outputs, msg, 6, False)
+                post.plot(metrics, data, outputs, msg, 6, False, 0)
                 break
             break
 
