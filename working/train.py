@@ -167,7 +167,7 @@ def main():
     for epoch in range(num_epochs):
         train1(net,train_loader,loss_f,optimizer,epoch,num_epochs,post)
         #scheduler.step()
-        if (epoch + 1) % 10 == 0 or epoch == 0:
+        if (epoch + 1) % 2 == 0 or epoch == 0:
             Tfde_a = val1(net,val_loader,loss_f,epoch,num_epochs, post, Tfde_a, config)
 
 

@@ -4,5 +4,7 @@ dataset/**
 motion/**
 waymo_motion/**
 __pycache__/**
-trials/**
+motion/trials/**
+motion/dataSample/**
+motion/result/**
 test_today.ipynb

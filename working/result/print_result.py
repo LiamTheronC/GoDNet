@@ -41,6 +41,8 @@ result['vp_5f_GANet'] = 'loss:3.06 -- fde:1.32 -- ade:0.60 -- Tfde:4.95 -- Tade:
 #246,(A2M,M2M,M2A,A2A)
 
 result['vp_100f_GANet'] = 'loss:2.25 -- fde:0.95 -- ade:0.44 -- Tfde:3.58 -- Tade:1.59' # 246, (M2A,A2A)
+result['laneGCN'] = 'loss:0.77 -- fde:1.17 -- ade:0.51 -- Tfde:4.55 -- Tade:1.89'
+
 
 
 

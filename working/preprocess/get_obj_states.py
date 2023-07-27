@@ -17,21 +17,21 @@ def get_tracks_info(tracks: list) -> list:
     obj_id, obj_type, obj_traj, obj_shape, obj_velocity_heading, obj_valid = [],[],[],[],[],[]
     
     for track in tracks:
-        obj_id += [track['id']]
-        obj_type += [track['objectType']]
+        obj_id.append(track['id'])
+        obj_type.append(track['objectType'])
 
         states = track['states']
         states_valid, states_traj, states_velocity_heading = [],[],[]
         
         for state in states:
-            states_valid += [state['valid']]
+            states_valid.append(state['valid'])
             
             if state['valid']:
-                states_traj += [[state['centerX'],state['centerY'],state['centerZ']]]
-                states_velocity_heading += [[state['velocityX'],state['velocityY'],state['heading']]]
+                states_traj.append([state['centerX'],state['centerY'],state['centerZ']])
+                states_velocity_heading.append([state['velocityX'], state['velocityY'], state['heading']])
             else:
-                states_traj += [[0,0,0]]
-                states_velocity_heading += [[0,0,0]]
+                states_traj.append([0,0,0])
+                states_velocity_heading.append([0,0,0])
     
         if True in states_valid:
             valid_index = states_valid.index(True)
@@ -40,13 +40,12 @@ def get_tracks_info(tracks: list) -> list:
         else:
             states_shape = None
         
-        obj_valid += [np.array(states_valid)]
-        obj_traj += [np.array(states_traj)]
-        obj_velocity_heading += [np.array(states_velocity_heading)]
-        obj_shape += [np.array(states_shape)]
+        obj_valid.append(np.array(states_valid))
+        obj_traj.append(np.array(states_traj))
+        obj_velocity_heading.append(np.array(states_velocity_heading))
+        obj_shape.append(np.array(states_shape))
 
     return obj_id, obj_type, obj_valid,obj_traj,obj_velocity_heading,obj_shape
-
 
 
 
@@ -108,6 +107,7 @@ def get_obj_states(scenario_list, index: int) -> dict:
     data['target_indx'] = ttp_indx
     data['target_id'] = [obj_id[i] for i in ttp_indx]
     data['target_type'] = [obj_type[i] for i in ttp_indx]
+
 
     return data
 

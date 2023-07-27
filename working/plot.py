@@ -131,7 +131,7 @@ def main():
                 loss_out = loss_f(outputs,data)
                 post.append(metrics,loss_out,outputs,data)
                 msg,_ = post.display(metrics, 0, epoch, num_epochs, "Validation")
-                post.plot(metrics, data, outputs, msg, 6, False, 0)
+                post.plot(metrics, data, outputs, msg, 6, False, 1)
                 break
             break
 
