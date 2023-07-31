@@ -14,8 +14,8 @@ import time
 import logging
 from waymo_open_dataset.metrics.python import config_util_py as config_util
 
-from model.laneGCN import GreatNet
-from losses.lanegcn import Loss
+from model.GoDNet import GreatNet
+from losses.godnet import Loss
 
 
 class W_Dataset(Dataset):
@@ -89,7 +89,7 @@ def main():
     config["dim_feats"] = {'xyvp':[6,2], 'xyz':[4,3], 'xy':[3,2], 'xyp':[4,2], 'vp':[4,2], 'vpt':[5,2]}
     config['type_feats'] = 'vp'
     config['f'] = '100f'
-    config['name'] = 'laneGCN'
+    config['name'] = 'GoDNet'
     
     config['val_final'] = '/home/avt/prediction/Waymo/data_processed/vp/val_final' 
     config['model_weights'] = 'weights/'+ config['name'] + '_' + config['type_feats'] + '_' + config['f'] + '0721.pth'

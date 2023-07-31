@@ -34,22 +34,7 @@ class Waymo_Motion_Preprocess:
             index
         
         Notes:
-            A scenario is a dict of 9 keys:
-
-            'currentTimeIndex',
-            'dynamicMapStates'
-            'mapFeatures',
-            'objectsOfInterest', 
-            'scenarioId', 
-            'sdcTrackIndex',
-            'timestampsSeconds', 
-            'tracks', 
-            'tracksToPredict'
-
-            get_road_info() and get_graph() are deployed for 'dynamicMapStates' and 'mapFeatures'
-            
-            get_obj_states() and get_obj_feats() are for the rest.
-
+            get a dict() of processed data
         """
 
         data = get_obj_states(self.scenario_list, index)

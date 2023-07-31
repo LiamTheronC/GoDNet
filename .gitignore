@@ -10,3 +10,6 @@ motion/result/**
 test_today.ipynb
 result/**
 submission/**
+dataSample/**
+trials/**
+weights/**
