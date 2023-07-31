@@ -8,3 +8,5 @@ motion/trials/**
 motion/dataSample/**
 motion/result/**
 test_today.ipynb
+result/**
+submission/**
