@@ -1,4 +1,4 @@
-# Waymo Motion Prediction - Dataset Preprocessing
+# Goal Driven Multi-Modal Motion Predictions
 This repository provides an unofficial preprocessing of the [Waymo Open Dataset](https://waymo.com/open/) - [Motion Prediction](https://waymo.com/intl/en_us/open/data/motion/). It aims to enhance the usability and accessibility of the dataset by offering a set of preprocessing scripts and utilities. 
 
 ---
