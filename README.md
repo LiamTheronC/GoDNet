@@ -100,10 +100,10 @@ see [plot.py](https://github.com/LiamTheronC/GoDNet/blob/master/working/plot.py)
 ## Results
 ### Result in metrics
 
-| FirstName     | LastName      | City     |
-| ------------- | ------------- | -------- |
-| John          | Test1         | NewYork  |
-| Bob           | Test2         | Toronto  |
+            | FirstName     | LastName      | City     |
+            | ------------- | ------------- | -------- |
+            | John          | Test1         | NewYork  |
+            | Bob           | Test2         | Toronto  |
 
 ### Visualization of the results.
 ![result](pictures/result.png)
