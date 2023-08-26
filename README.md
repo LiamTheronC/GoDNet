@@ -47,12 +47,12 @@ pip install protobuf
 ```
 6. Clone the Waymo-Motion-Dataset-Preprocess repository.
 ```
-git clone https://github.com/LiamTheronC/Waymo-Motion-Preprocess.git
+git clone https://github.com/LiamTheronC/GoDNet.git
 ```
-### 2. Download dataset
+### 2. Prepare dataset
 > The motion dataset is provided as sharded TFRecord format files containing protocol buffer data. The data are split into training, test, and validation sets with a split of 70% training, 15% testing and 15% validation data.
 ```
-cd Waymo-Motion-Preprocess
+cd GoDNet/working
 mkdir dataset && cd dataset
 mkdir train val test
 ```
@@ -60,14 +60,18 @@ Download the full dataset from Google Cloud to the directories respectively foll
 
 Make sure the folder structure is:
 ```
-Waymo-Motion-Preprocess
-├── dataset/
-    ├── train/
-    ├── val/
-    └──test/
-├── dataLoader/
-└── preprocess/
-    ├── preprocess_exe.py
+GoDNet
+├── working/
+    ├── dataset/
+        ├── train/
+        ├── val/
+        └──test/
+    ├── dataLoader/
+    ├──model/
+    ├── preprocess/
+        ├── preprocess_exe.py
+        |...
+    ├── train.py
     |...
 
 ```
