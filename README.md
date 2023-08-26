@@ -45,7 +45,7 @@ pip install tensorflow==2.4
 ```
 pip install protobuf
 ```
-6. Clone the Waymo-Motion-Dataset-Preprocess repository.
+6. Clone the GoDNet repository.
 ```
 git clone https://github.com/LiamTheronC/GoDNet.git
 ```
