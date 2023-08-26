@@ -56,9 +56,9 @@ cd GoDNet/working
 mkdir dataset && cd dataset
 mkdir train val test
 ```
-Download the full dataset from Google Cloud to the directories respectively following the [official instructions](https://waymo.com/open/).
+1. Download the full dataset from Google Cloud to the directories respectively following the [official instructions](https://waymo.com/open/).
 
-Make sure the folder structure is:
+2. Make sure the folder structure is:
 ```
 GoDNet
 ├── working/
@@ -75,15 +75,14 @@ GoDNet
     |...
 
 ```
-
----
-
-## How to use
-Run the execution file for train/val/test dataset.
+3. Preprocess the dataset following [Waymo-Motion-Preprocess](https://github.com/LiamTheronC/Waymo-Motion-Preprocess).
 ```
 python preprocess_exe.py train --downsample-factor=10 --type-feats=vp
 ```
-> In the original lane graph, the `sample distance` of the lane centerlines is approximately `0.5m`. It's recommended to downsample the graph by a factor of 10. Users could modify the downsample rate `--downsample-factor` accordingly.
+---
+
+## How to use
+
 
 ---
 
