@@ -83,7 +83,7 @@ python preprocess_exe.py train --downsample-factor=10 --type-feats=vp
 
 ## Train and evaluation
 
-### Prerequest
+### Prerequisites
 Please ensure you have prepared the environment and the Waymo Open Dataset dataset.
 
 ### Train
