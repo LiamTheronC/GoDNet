@@ -100,27 +100,11 @@ see [plot.py](https://github.com/LiamTheronC/GoDNet/blob/master/working/plot.py)
 ## Results
 ### Result in metrics
 
-| Methods       | minFDE(k=6)↓  | minADE(k=6) ↓|  City     |  
+| Methods       | minFDE(k=6)↓  | minADE(k=6) ↓|  MR↓      |  
 | ------------- | ------------- | -------------| --------  |
-| John          | Test1         | NewYork  |  City     |  
-| Bob           | Test2         | Toronto  |  City     |  
-| Bob           | Test2         | Toronto  |  City     |  
-Methods
-minFDE(k=6)↓
-minADE(k=6) ↓
-MR↓
-LSTM
-2.36
-1.00
-0.38
-laneGCN
-2.27
-1.04
-0.37
-GoDNet
-2.02
-0.96
-0.31
+|   LSTM        | 2.36          |1.00          |0.38       |  
+|laneGCN        |2.27           |1.04          |0.37       |
+|GoDNet         |2.02           |0.96          | 0.31      |
 
 ### Visualization of the results.
 ![result](pictures/result.png)
