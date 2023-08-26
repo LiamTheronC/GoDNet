@@ -7,7 +7,7 @@ In this work, we introduce a novel framework known as the **Goal-Driven Motion P
 ---
 
 ## Results
-![result1](pictures/result1.png) ![result2](pictures/result2.png) 
+![result](pictures/result.png)
 
 ---
 
