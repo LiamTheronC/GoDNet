@@ -6,17 +6,21 @@ In this work, we introduce a novel framework known as the **Goal-Driven Motion P
 
 ---
 
-## Table of Contents
-* [Get started](https://github.com/LiamTheronC/waymo_motion_prediction#installation)
-* [How to use](https://github.com/LiamTheronC/waymo_motion_prediction#usage)
-* [License](https://github.com/LiamTheronC/waymo_motion_prediction/blob/main/README.md#license)
+## Results
+
 
 ---
 
 ## Architecture
 ![Architecture](pictures/Architecture.png)
 
- 
+---
+
+## Table of Contents
+* [Get started](https://github.com/LiamTheronC/waymo_motion_prediction#installation)
+* [How to use](https://github.com/LiamTheronC/waymo_motion_prediction#usage)
+* [License](https://github.com/LiamTheronC/waymo_motion_prediction/blob/main/README.md#license)
+
 ---
  
 ## License
