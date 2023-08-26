@@ -1,4 +1,3 @@
-# M6 training
 
 import os
 import numpy as np
@@ -22,6 +21,8 @@ def parse_args():
   parser = argparse.ArgumentParser(description='GoDNet training')
   parser.add_argument('--type-feats', choices=['vp', 'xyvp', 'xyz','xyp'], default='vp', help='types of feature')
   parser.add_argument('--resume-from', help='the checkpoint file to resume from')
+  parser.add_argument('--lr', default=1e-3, help='learning rate set for training')
+  parser.add_argument('--batch-size', default=32, help='batch size set for training')
   args = parser.parse_args()
 
   return args
@@ -107,7 +108,7 @@ def main():
   config = dict()
   config['n_actornet'] = 128
   config['num_epochs'] = 150
-  config['lr'] = 1e-3
+  config['lr'] = args.lr
   config["num_scales"] = 6
   config["n_map"] = 128
   config["n_actor"] = 128
@@ -126,7 +127,7 @@ def main():
   config["cls_coef"] = 1.0
   config["reg_coef"] = 1.0
   config["metrics_preds"] = 80
-  config['batch_size] = 32
+  config['batch_size] = args.bacth_size
   config['acrs'] = [20,40,60] # [40,80]
   config['cut'] = range(10,50)
   config["dim_feats"] = {'xyvp':[6,2], 'xyz':[4,3], 'xy':[3,2], 'xyp':[4,2], 'vp':[4,2], 'vpt':[5,2]}
@@ -153,7 +154,7 @@ def main():
   optimizer = optim.Adam(net.parameters(), lr = config['lr'])
   #scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.08)
 
-  batch_size = config['batch_size]
+  batch_size = config['batch_size']
   dataset_train = W_Dataset(config['train_split'])
   train_loader = DataLoader(dataset_train, 
                          batch_size = batch_size ,
