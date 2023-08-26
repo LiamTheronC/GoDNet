@@ -100,10 +100,11 @@ see [plot.py](https://github.com/LiamTheronC/GoDNet/blob/master/working/plot.py)
 ## Results
 ### Result in metrics
 
-| FirstName     | LastName      | City     |
-| ------------- | ------------- | -------- |
-| John          | Test1         | NewYork  |
-| Bob           | Test2         | Toronto  |
+| Methods       | minFDE(k=6)↓  | minADE(k=6) ↓|  City     |  
+| ------------- | ------------- | -------------| --------  |
+| John          | Test1         | NewYork  |  City     |  
+| Bob           | Test2         | Toronto  |  City     |  
+| Bob           | Test2         | Toronto  |  City     |  
 Methods
 minFDE(k=6)↓
 minADE(k=6) ↓
@@ -120,8 +121,6 @@ GoDNet
 2.02
 0.96
 0.31
-<img width="586" alt="image" src="https://github.com/LiamTheronC/GoDNet/assets/52328101/a14d2551-d147-4c60-8ad5-3e75e6a051b0">
-
 
 ### Visualization of the results.
 ![result](pictures/result.png)
