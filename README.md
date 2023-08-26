@@ -93,7 +93,7 @@ python train.py --type-feats=vp
 ```
 
 ### Visualization
-see visual.py
+see plot.py
 
 ---
 
