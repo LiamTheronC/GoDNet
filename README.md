@@ -15,7 +15,7 @@ In this work, we introduce a novel framework known as the **Goal-Driven Motion P
 * [Introduction](https://github.com/LiamTheronC/GoDNet/blob/master/README.md#introduction)
 * [Architecture](https://github.com/LiamTheronC/GoDNet/blob/master/README.md#architecture)
 * [Get started](https://github.com/LiamTheronC/GoDNet/blob/master/README.md#get-started)
-* [How to use](https://github.com/LiamTheronC/GoDNet/blob/master/README.md#how-to-use)
+* [Train and evaluation](https://github.com/LiamTheronC/GoDNet/blob/master/README.md#train-and-evaluation)
 * [Results](https://github.com/LiamTheronC/GoDNet/blob/master/README.md#results)
 * [License](https://github.com/LiamTheronC/waymo_motion_prediction/blob/main/README.md#license)
 
@@ -81,7 +81,7 @@ python preprocess_exe.py train --downsample-factor=10 --type-feats=vp
 ```
 ---
 
-## How to use
+## Train and evaluation
 
 
 ---
