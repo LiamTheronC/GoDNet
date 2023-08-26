@@ -18,6 +18,18 @@ from model.GoDNet import GreatNet
 from losses.godnet import Loss
 
 
+def parse_args():
+  parser = argparse.ArgumentParser(description='waymo motion dataset preprocess')
+  parser.add_argument('path', choices=['train', 'val', 'test'], help='file path for the preprocess')
+  parser.add_argument('--num-scale', default=6, help='scale of predecessor and successor node pairs')
+  parser.add_argument('--cross-dist', default=6, help='cross distance for node left paris and right pairs')
+  parser.add_argument('--downsample-factor', default=10, help='downsample factor for graph')
+  parser.add_argument('--type-feats', choices=['vp', 'xyvp', 'xyz','xyp'], default='vp', help='types of feature')
+  args = parser.parse_args()
+
+  return args
+
+
 class W_Dataset(Dataset):
     def __init__(self,path) -> None:
 
@@ -82,12 +94,18 @@ def val1(net, val_loader, loss_f, epoch, num_epochs, post, Tfde_a, config):
 
 @profile
 def main():
-    seed = 33
+    args = parse_args()
 
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    working_dir = os.path.dirname(script_dir)
+    
+    seed = 33
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
     np.random.seed(seed)
     random.seed(seed)
+
+    
 
     config = dict()
     config['n_actornet'] = 128
@@ -115,13 +133,11 @@ def main():
     config['cut'] = range(10,50)
     config["dim_feats"] = {'xyvp':[6,2], 'xyz':[4,3], 'xy':[3,2], 'xyp':[4,2], 'vp':[4,2], 'vpt':[5,2]}
     config['type_feats'] = 'vp'
-    config['f'] = '100f'
     config['name'] = 'GoDNet'
-    config['train_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/train_' + config['f'] 
-    config['val_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/val_' + config['f']
+    config['train_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/train_' 
+    config['val_split'] = '/home/avt/prediction/Waymo/data_processed/' + config['type_feats'] + '/val_' 
     config['dd'] = date.today().strftime('%m%d')
 
-    
 
     net = GreatNet(config)
     checkpoint = torch.load('/home/avt/prediction/Waymo/working/weights/GoDNet.pth') 
