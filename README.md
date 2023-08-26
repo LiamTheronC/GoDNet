@@ -89,7 +89,7 @@ Please ensure you have prepared the environment and the Waymo Open Dataset datas
 ### Train
 Train GoDnet with RTX 3080.
 ```
-python train.py
+python train.py --type-feats=vp 
 ```
 
 ### Visualization
