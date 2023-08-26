@@ -19,17 +19,26 @@ from losses.godnet import Loss
 
 def parse_args():
   parser = argparse.ArgumentParser(description='GoDNet training')
-  parser.add_argument('--type-feats', choices=['vp', 'xyvp', 'xyz','xyp'], default='vp', help='types of feature')
-  parser.add_argument('--resume-from', help='the checkpoint file to resume from')
-  parser.add_argument('--lr', default=1e-3, help='learning rate set for training')
-  parser.add_argument('--batch-size', default=32, help='batch size set for training')
+  parser.add_argument('--type-feats', 
+                      choices=['vp', 'xyvp', 'xyz','xyp'], default='vp', 
+                      help='types of feature, vp represents velocity and heading angle')
+  parser.add_argument('--resume-from', 
+                      help='the checkpoint file to resume from')
+  parser.add_argument('--lr', 
+                      default=1e-3, 
+                      type=float
+                      help='learning rate set for training')
+  parser.add_argument('--batch-size', 
+                      default=32, 
+                      type=int
+                      help='batch size set for training')
   args = parser.parse_args()
 
   return args
 
 
 class W_Dataset(Dataset):
-    def __init__(self,path) -> None:
+    def __init__(self, path) -> None:
 
         self.path = path
         self.files = os.listdir(path)
@@ -47,7 +56,7 @@ class W_Dataset(Dataset):
 
 
 def train1(net,train_loader,loss_f,optimizer,epoch,num_epochs, post):
-    # output of the net is directly trajectory
+    # output of the net is directly trajectories.
     net.train()
     metrics = dict()
     start_time = time.time()
@@ -84,13 +93,12 @@ def val1(net, val_loader, loss_f, epoch, num_epochs, post, Tfde_a, config):
 
     if Tfde < Tfde_a:
         print('update weights')
-        torch.save(net.state_dict(), 'weights/'+ config['name'] +'_'+ config['type_feats'] + '_' + config['dd'] +'.pth')
+        torch.save(net.state_dict(), 'weights/{config['name']}_{config['type_feats']}_{config['dd']}.pth')
         Tfde_a = Tfde
 
     return Tfde_a
 
 
-@profile
 def main():
   args = parse_args()
 
@@ -127,7 +135,7 @@ def main():
   config["cls_coef"] = 1.0
   config["reg_coef"] = 1.0
   config["metrics_preds"] = 80
-  config['batch_size] = args.bacth_size
+  config['batch_size] = args.batch_size
   config['acrs'] = [20,40,60] # [40,80]
   config['cut'] = range(10,50)
   config["dim_feats"] = {'xyvp':[6,2], 'xyz':[4,3], 'xy':[3,2], 'xyp':[4,2], 'vp':[4,2], 'vpt':[5,2]}
@@ -139,7 +147,7 @@ def main():
 
 
   net = GreatNet(config)
-  if args.resume_from is not None and osp.isfile(args.resume_from):
+  if args.resume_from is not None and os.path.isfile(args.resume_from):
     resume_path = os.path.join(working_dir, 'weights', args.resume_from)
     checkpoint = torch.load(resume_path) 
     net.load_state_dict(checkpoint)
