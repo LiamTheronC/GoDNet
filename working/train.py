@@ -13,7 +13,7 @@ from memory_profiler import profile
 from metrics.metrics import Postprocess
 import time
 from datetime import date
-
+import argparse
 from model.GoDNet import GreatNet 
 from losses.godnet import Loss
 
@@ -126,6 +126,7 @@ def main():
   config["cls_coef"] = 1.0
   config["reg_coef"] = 1.0
   config["metrics_preds"] = 80
+  config['batch_size] = 32
   config['acrs'] = [20,40,60] # [40,80]
   config['cut'] = range(10,50)
   config["dim_feats"] = {'xyvp':[6,2], 'xyz':[4,3], 'xy':[3,2], 'xyp':[4,2], 'vp':[4,2], 'vpt':[5,2]}
@@ -152,7 +153,7 @@ def main():
   optimizer = optim.Adam(net.parameters(), lr = config['lr'])
   #scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.08)
 
-  batch_size = 32
+  batch_size = config['batch_size]
   dataset_train = W_Dataset(config['train_split'])
   train_loader = DataLoader(dataset_train, 
                          batch_size = batch_size ,
