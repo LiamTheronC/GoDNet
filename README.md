@@ -83,6 +83,17 @@ python preprocess_exe.py train --downsample-factor=10 --type-feats=vp
 
 ## Train and evaluation
 
+###Prerequest
+Please ensure you have prepared the environment and the Waymo Open Dataset dataset.
+
+###Train
+Train GoDnet with 2 GPUs
+```
+train.sh ./projects/configs/bevformer/bevformer_base.py 8
+```
+
+###Visualization
+see visual.py
 
 ---
 
