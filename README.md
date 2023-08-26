@@ -93,7 +93,7 @@ python train.py --type-feats=vp
 ```
 
 ### Visualization
-see plot.py
+see [plot.py](https://github.com/LiamTheronC/GoDNet/blob/master/working/plot.py).
 
 ---
 
