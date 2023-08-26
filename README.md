@@ -1,13 +1,10 @@
-# Goal Driven Multi-Modal Motion Predictions
-This repository provides an unofficial preprocessing of the [Waymo Open Dataset](https://waymo.com/open/) - [Motion Prediction](https://waymo.com/intl/en_us/open/data/motion/). It aims to enhance the usability and accessibility of the dataset by offering a set of preprocessing scripts and utilities. 
-
+# Goal Driven Multi-Modal Motion Prediction
+In this work, new framework termed Goal Driven Motion Prediction Network(GoDNet) is presented, which learns from short term history observations and vecterised map information to support multiple autonomous driving motion prediction tasks. GoDNet exploits both spatial and temporal information by leveraging 1D-CNN on history trajectories and graph convolution on sparsed lane graph. To aggregate interaction aware information, the authors design cross-attention modules between map and actor or between actors them selves. Furthermore, a goal-driven unit is developed to enhance the ability of long-term prediction on various scales. The proposed approach achieves the state-of-the-artin terms of minFDE and minADE metric on the Waymo Open Dataset.
 ---
 
 ## Table of Contents
-* [Installation](https://github.com/LiamTheronC/waymo_motion_prediction#installation)
+* [Get started](https://github.com/LiamTheronC/waymo_motion_prediction#installation)
 * [How to use](https://github.com/LiamTheronC/waymo_motion_prediction#usage)
-* [About the original data](https://github.com/LiamTheronC/waymo_motion_prediction/blob/main/README.md#about-the-original-dataset)
-* [What's in the preprocessed data](https://github.com/LiamTheronC/waymo_motion_prediction/blob/main/README.md#whats-in-the-preprocessed-data)
 * [License](https://github.com/LiamTheronC/waymo_motion_prediction/blob/main/README.md#license)
 
 ---
