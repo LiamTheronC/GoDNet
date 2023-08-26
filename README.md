@@ -14,8 +14,8 @@ In this work, we introduce a novel framework known as the **Goal-Driven Motion P
 ## Table of Contents
 * [Introduction](https://github.com/LiamTheronC/GoDNet/blob/master/README.md#introduction)
 * [Architecture](https://github.com/LiamTheronC/GoDNet/blob/master/README.md#architecture)
-* [Get started](https://github.com/LiamTheronC/waymo_motion_prediction#installation)
-* [How to use](https://github.com/LiamTheronC/waymo_motion_prediction#usage)
+* [Get started](https://github.com/LiamTheronC/GoDNet/blob/master/README.md#get-started)
+* [How to use](https://github.com/LiamTheronC/waymo_motion_prediction#how-to-use)
 * [Results](https://github.com/LiamTheronC/GoDNet/blob/master/README.md#results)
 * [License](https://github.com/LiamTheronC/waymo_motion_prediction/blob/main/README.md#license)
 
