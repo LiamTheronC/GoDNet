@@ -87,9 +87,9 @@ python preprocess_exe.py train --downsample-factor=10 --type-feats=vp
 Please ensure you have prepared the environment and the Waymo Open Dataset dataset.
 
 ### Train
-Train GoDnet with 8 GPUs.
+Train GoDnet with 4 GPUs.
 ```
-./dist_train.sh vp 8
+./dist_train.sh vp 4
 ```
 
 ### Visualization
