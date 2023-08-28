@@ -106,7 +106,7 @@ see [plot.py](https://github.com/LiamTheronC/GoDNet/blob/master/working/plot.py)
 |laneGCN        |2.27           |1.04          |0.27       |
 |GoDNet         |2.02           |0.91          |0.21       |
 
-### Visualization of the results.
+### Visualization of the results
 ![result](pictures/result.png)
 
 ---
